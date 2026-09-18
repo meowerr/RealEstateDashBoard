@@ -235,18 +235,14 @@ def render_enhanced_geo_map(
         or filtered_df.empty
         or active_count <= 0
     ):
-        fig = go.Figure(go.Scattermap(lat=[], lon=[]))
-        fig.update_layout(
+        scatter_cls = getattr(go, "Scattermap", getattr(go, "Scattermapbox", None))
+        fig = go.Figure(scatter_cls(lat=[], lon=[])) if scatter_cls else go.Figure()
+        empty_layout = dict(
             title=dict(
                 text="🗺️ Geospatial Pricing & Density Surface (No Listings Matching Filter)",
                 font=dict(size=12, color=DEEP_NAVY, family="Inter, sans-serif", weight="bold"),
                 x=0.01,
                 y=0.97
-            ),
-            map=dict(
-                style="open-street-map",
-                center=DEFAULT_MAP_CENTER,
-                zoom=DEFAULT_MAP_ZOOM
             ),
             height=height,
             margin=dict(l=0, r=0, t=30, b=0),
@@ -264,6 +260,11 @@ def render_enhanced_geo_map(
                 )
             ]
         )
+        if hasattr(fig.layout, "map"):
+            empty_layout["map"] = dict(style="open-street-map", center=DEFAULT_MAP_CENTER, zoom=DEFAULT_MAP_ZOOM)
+        elif hasattr(fig.layout, "mapbox"):
+            empty_layout["mapbox"] = dict(style="open-street-map", center=DEFAULT_MAP_CENTER, zoom=DEFAULT_MAP_ZOOM)
+        fig.update_layout(**empty_layout)
         return fig
 
     # Resolve coordinates
@@ -332,19 +333,36 @@ def render_enhanced_geo_map(
             clustered_df["green_pct"] = clustered_df.get("green_coverage_pct", 5.0)
             clustered_df["location"] = clustered_df.get("normalized_location", "Hub")
 
-        fig_map = px.scatter_map(
-            clustered_df,
-            lat="lat",
-            lon="lon",
-            size="count",
-            color="median_ppm",
-            hover_name="location",
-            hover_data=["count", "median_price", "median_ppm", "aqi", "green_pct"],
-            color_continuous_scale=EGYPTIAN_GEO_HEATMAP_SCALE,
-            size_max=26,
-            zoom=DEFAULT_MAP_ZOOM,
-            center=DEFAULT_MAP_CENTER
-        )
+        if hasattr(px, "scatter_map"):
+            fig_map = px.scatter_map(
+                clustered_df,
+                lat="lat",
+                lon="lon",
+                size="count",
+                color="median_ppm",
+                hover_name="location",
+                hover_data=["count", "median_price", "median_ppm", "aqi", "green_pct"],
+                color_continuous_scale=EGYPTIAN_GEO_HEATMAP_SCALE,
+                size_max=26,
+                zoom=DEFAULT_MAP_ZOOM,
+                center=DEFAULT_MAP_CENTER,
+                map_style="open-street-map"
+            )
+        else:
+            fig_map = px.scatter_mapbox(
+                clustered_df,
+                lat="lat",
+                lon="lon",
+                size="count",
+                color="median_ppm",
+                hover_name="location",
+                hover_data=["count", "median_price", "median_ppm", "aqi", "green_pct"],
+                color_continuous_scale=EGYPTIAN_GEO_HEATMAP_SCALE,
+                size_max=26,
+                zoom=DEFAULT_MAP_ZOOM,
+                center=DEFAULT_MAP_CENTER,
+                mapbox_style="open-street-map"
+            )
 
         fig_map.update_traces(
             hovertemplate="<b>Hub Cluster: %{hovertext}</b><br>"
@@ -360,18 +378,32 @@ def render_enhanced_geo_map(
 
     else:
         # -------------------------------------------------------------
-        # MODE A: Dynamic Density Heatmap (px.density_map)
+        # MODE A: Dynamic Density Heatmap (px.density_map / px.density_mapbox)
         # -------------------------------------------------------------
-        fig_map = px.density_map(
-            geo_data,
-            lat="lat",
-            lon="lon",
-            z=z_col,
-            radius=16,
-            zoom=DEFAULT_MAP_ZOOM,
-            center=DEFAULT_MAP_CENTER,
-            color_continuous_scale=EGYPTIAN_GEO_HEATMAP_SCALE
-        )
+        if hasattr(px, "density_map"):
+            fig_map = px.density_map(
+                geo_data,
+                lat="lat",
+                lon="lon",
+                z=z_col,
+                radius=16,
+                zoom=DEFAULT_MAP_ZOOM,
+                center=DEFAULT_MAP_CENTER,
+                color_continuous_scale=EGYPTIAN_GEO_HEATMAP_SCALE,
+                map_style="open-street-map"
+            )
+        else:
+            fig_map = px.density_mapbox(
+                geo_data,
+                lat="lat",
+                lon="lon",
+                z=z_col,
+                radius=16,
+                zoom=DEFAULT_MAP_ZOOM,
+                center=DEFAULT_MAP_CENTER,
+                color_continuous_scale=EGYPTIAN_GEO_HEATMAP_SCALE,
+                mapbox_style="open-street-map"
+            )
 
         fig_map.update_traces(
             hovertemplate="<b>Density & Capital Concentration</b><br>"
@@ -381,16 +413,15 @@ def render_enhanced_geo_map(
 
         title_text = "🗺️ Geospatial Pricing Concentration & Density Surface (Greater Cairo)"
 
-    # Common Executive Layout
+    # Common Executive Layout (Always Open-Source OpenStreetMap, No API Key Required)
     final_title = title if title is not None else title_text
-    fig_map.update_layout(
+    layout_update = dict(
         title=dict(
             text=final_title,
             font=dict(size=12, color=DEEP_NAVY, family="Inter, sans-serif", weight="bold"),
             x=0.01,
             y=0.97
         ),
-        map_style="open-street-map",
         height=height,
         margin=dict(l=0, r=0, t=32, b=0),
         coloraxis_colorbar=dict(
@@ -405,6 +436,13 @@ def render_enhanced_geo_map(
         uirevision="geo_cairo",
         transition=dict(duration=350, easing="cubic-in-out")
     )
+
+    if hasattr(fig_map.layout, "map"):
+        layout_update["map_style"] = "open-street-map"
+    elif hasattr(fig_map.layout, "mapbox"):
+        layout_update["mapbox_style"] = "open-street-map"
+
+    fig_map.update_layout(**layout_update)
 
     return fig_map
 

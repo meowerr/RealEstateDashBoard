@@ -12,5 +12,5 @@ scipy>=1.10.0
 scikit-learn>=1.3.0
 joblib>=1.3.0
 
-# Interactive Charts & Geospatial Analytics
-plotly>=5.18.0
+# Interactive Charts & Geospatial Analytics (MapLibre Open-Source, Zero API Key)
+plotly>=6.0.0
