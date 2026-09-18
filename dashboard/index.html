@@ -1,0 +1,2235 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Egypt Real Estate — Executive Analytics Platform (v1)</title>
+
+<!-- Modern Typography -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Leaflet.js for Geospatial Mapping -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+<!-- Chart.js for Responsive Visualizations -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<!-- Audited Dataset Bundle -->
+<script src="dashboard_data.js"></script>
+
+<style>
+  :root {
+    /* Semantic Real Estate Palette (Light Theme) */
+    --bg-page: #f8fafc;
+    --bg-card: #ffffff;
+    --border-card: #e2e8f0;
+    --border-light: #f1f5f9;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    
+    --primary: #1e3a8a;          /* Navy Sapphire: Institutional Trust */
+    --primary-light: #eff6ff;
+    --primary-accent: #3b82f6;
+    --success: #059669;          /* Emerald Jade: Growth & Compounds */
+    --success-light: #ecfdf5;
+    --cyan: #0284c7;             /* Mediterranean Cyan: Rates & Focus */
+    --cyan-light: #e0f2fe;
+    --warning: #d97706;          /* Desert Amber: OpEx & Warnings */
+    --warning-light: #fffbeb;
+    --purple: #7c3aed;           /* Royal Amethyst: Luxury & High ROI */
+    --purple-light: #f5f3ff;
+    
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 4px 18px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+    --shadow-hover: 0 14px 32px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+    --transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  [data-theme="dark"] {
+    /* Semantic Real Estate Palette (Dark Theme) */
+    --bg-page: #090d16;          /* Obsidian Midnight */
+    --bg-card: #111827;          /* Slate 900 */
+    --border-card: #1f2937;
+    --border-light: #1e293b;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    
+    --primary: #3b82f6;          /* Cobalt Sapphire */
+    --primary-light: #1e293b;
+    --primary-accent: #60a5fa;
+    --success: #10b981;          /* Bright Jade */
+    --success-light: #064e3b;
+    --cyan: #38bdf8;             /* Vibrant Sky Cyan */
+    --cyan-light: #0c4a6e;
+    --warning: #f59e0b;          /* Ochre Amber */
+    --warning-light: #78350f;
+    --purple: #a855f7;           /* Vibrant Violet */
+    --purple-light: #4c1d95;
+    
+    --shadow: 0 6px 24px -2px rgba(0, 0, 0, 0.45);
+    --shadow-hover: 0 16px 40px -4px rgba(0, 0, 0, 0.65);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+  body { background-color: var(--bg-page); color: var(--text-primary); line-height: 1.5; padding-bottom: 100px; -webkit-font-smoothing: antialiased; transition: background-color 0.25s ease, color 0.25s ease; }
+
+  /* Top Navigation Bar */
+  .navbar {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-card);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    padding: 14px 36px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    transition: var(--transition);
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-logo { width: 38px; height: 38px; background: var(--primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 16px; }
+  .brand-text h1 { font-size: 16px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.2px; }
+  .brand-text p { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
+
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+
+  /* Theme Toggle Button */
+  .theme-btn {
+    border: 1px solid var(--border-card);
+    background: var(--bg-card);
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .theme-btn:hover { background: var(--border-light); color: var(--text-primary); }
+
+  /* Presentation Slide Stepper Tabs */
+  .slide-nav-container {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-card);
+    padding: 10px 36px;
+    position: sticky;
+    top: 67px;
+    z-index: 999;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+  }
+  .slide-tabs {
+    display: flex;
+    gap: 8px;
+    max-width: 1480px;
+    margin: 0 auto;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .slide-tabs::-webkit-scrollbar { display: none; }
+  .slide-tab {
+    border: 1px solid var(--border-card);
+    background: var(--border-light);
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .slide-tab:hover { background: var(--border-card); color: var(--text-primary); }
+  .slide-tab.active {
+    background: var(--primary);
+    color: #ffffff;
+    border-color: var(--primary);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+  }
+  .slide-tab-num {
+    display: inline-flex;
+    width: 18px;
+    height: 18px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 800;
+  }
+  .slide-tab:not(.active) .slide-tab-num {
+    background: var(--border-card);
+    color: var(--text-secondary);
+  }
+
+  /* Main Container */
+  .container { max-width: 1480px; margin: 0 auto; padding: 28px 36px; }
+
+  /* Slide Views Architecture */
+  .slide-view { display: none; animation: fadeInSlide 0.25s ease forwards; }
+  .slide-view.active { display: block; }
+  @keyframes fadeInSlide { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Section Spacing & Headers (3 to 9 words) */
+  .slide-header {
+    margin-bottom: 26px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 14px;
+  }
+  .slide-header h2 { font-size: 21px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
+  .slide-header p { font-size: 13px; color: var(--text-secondary); margin-top: 4px; font-weight: 500; }
+
+  /* Market Pulse Ribbon */
+  .market-pulse {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-lg);
+    padding: 14px 22px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow);
+  }
+  .pulse-badge {
+    display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 800;
+    color: var(--primary); background: var(--primary-light); padding: 5px 12px;
+    border-radius: 20px; letter-spacing: 0.5px;
+  }
+  .pulse-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; animation: pulse-anim 2s infinite; }
+  @keyframes pulse-anim { 0% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.25); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.8; } }
+  .pulse-items { display: flex; gap: 24px; flex-wrap: wrap; }
+  .pulse-item { font-size: 12px; color: var(--text-secondary); }
+  .pulse-item strong { color: var(--text-primary); font-weight: 700; }
+
+  /* Persona Ribbon */
+  .persona-ribbon {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-lg);
+    padding: 14px 22px;
+    margin-bottom: 22px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .persona-title {
+    font-size: 11px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase;
+    letter-spacing: 0.6px; white-space: nowrap; display: flex; align-items: center; gap: 6px;
+  }
+  .persona-chips { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .persona-chip {
+    background: var(--border-light); border: 1px solid var(--border-card); padding: 5px 13px;
+    border-radius: 20px; font-size: 11px; font-weight: 700; color: var(--text-secondary);
+    cursor: pointer; transition: var(--transition);
+  }
+  .persona-chip:hover { background: var(--border-card); color: var(--text-primary); }
+  .persona-chip.active { background: var(--primary); color: #ffffff; border-color: var(--primary); }
+
+  /* Global Filter Suite */
+  .filter-bar {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-lg);
+    padding: 22px 26px;
+    margin-bottom: 34px;
+    box-shadow: var(--shadow);
+  }
+  .filter-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .filter-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; }
+  .filter-reset-btn {
+    background: var(--border-light); border: 1px solid var(--border-card); padding: 5px 12px; border-radius: 6px;
+    font-size: 11px; font-weight: 700; cursor: pointer; color: var(--text-secondary); transition: var(--transition);
+  }
+  .filter-reset-btn:hover { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+  .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 16px; }
+  .filter-group { display: flex; flex-direction: column; gap: 5px; }
+  .filter-label { font-size: 11px; font-weight: 700; color: var(--text-secondary); }
+  .filter-select, .filter-input {
+    padding: 8px 11px; border: 1px solid var(--border-card); border-radius: var(--radius-sm);
+    font-size: 12px; background: var(--bg-card); color: var(--text-primary); outline: none; transition: var(--transition);
+  }
+  .filter-select:focus, .filter-input:focus { border-color: var(--primary-accent); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15); }
+
+  /* Strategic KPI Cards */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 18px; margin-bottom: 36px; }
+  .kpi-card {
+    background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius-lg);
+    padding: 22px; box-shadow: var(--shadow); transition: var(--transition); position: relative; overflow: hidden;
+  }
+  .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+  .kpi-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-secondary); margin-bottom: 6px; }
+  .kpi-value { font-size: 27px; font-weight: 800; color: var(--text-primary); line-height: 1.15; margin-bottom: 6px; }
+  .kpi-sub { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+  .kpi-bar { position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--primary); }
+  .kpi-bar.emerald { background: var(--success); }
+  .kpi-bar.cyan { background: var(--cyan); }
+  .kpi-bar.amber { background: var(--warning); }
+  .kpi-bar.purple { background: var(--purple); }
+
+  /* Grid System */
+  .grid-12 { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; }
+  .col-12 { grid-column: span 12; }
+  .col-8 { grid-column: span 8; }
+  .col-7 { grid-column: span 7; }
+  .col-6 { grid-column: span 6; }
+  .col-5 { grid-column: span 5; }
+  .col-4 { grid-column: span 4; }
+
+  /* Card Component with Generous 28px Padding */
+  .card {
+    background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius-lg);
+    padding: 28px; box-shadow: var(--shadow); display: flex; flex-direction: column; margin-bottom: 24px;
+  }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+  .card-title-group h3 { font-size: 15px; font-weight: 800; color: var(--text-primary); }
+  .card-title-group p { font-size: 12px; color: var(--text-secondary); margin-top: 3px; font-weight: 500; }
+  .chart-wrapper { position: relative; width: 100%; height: 380px; }
+
+  /* Map Container & Switcher */
+  .map-header-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+  .heatmap-switcher { display: flex; background: var(--border-light); padding: 3px; border-radius: 8px; gap: 3px; }
+  .heatmap-btn {
+    border: none; background: transparent; padding: 6px 13px; font-size: 11px; font-weight: 700;
+    color: var(--text-secondary); border-radius: 6px; cursor: pointer; transition: var(--transition);
+  }
+  .heatmap-btn.active { background: var(--bg-card); color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  #mapContainer { height: 490px; width: 100%; border-radius: var(--radius-md); z-index: 1; border: 1px solid var(--border-card); }
+  .map-legend { display: flex; gap: 18px; align-items: center; margin-top: 14px; font-size: 12px; color: var(--text-secondary); flex-wrap: wrap; font-weight: 600; }
+  .map-legend-item { display: flex; align-items: center; gap: 6px; }
+  .map-legend-dot { width: 11px; height: 11px; border-radius: 50%; }
+  .map-notice {
+    margin-top: 12px; padding: 10px 14px; background: var(--border-light); border-left: 4px solid var(--warning);
+    border-radius: 6px; font-size: 12px; color: var(--text-secondary); font-weight: 500;
+  }
+
+  /* Punchy Takeaway Cards (Strict 3 to 9 words) */
+  .insights-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 18px; margin-bottom: 24px; }
+  .insight-card {
+    background: var(--bg-card); border: 1px solid var(--border-card); border-left: 5px solid var(--primary);
+    border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow);
+  }
+  .insight-card.success { border-left-color: var(--success); }
+  .insight-card.warning { border-left-color: var(--warning); }
+  .insight-card.purple { border-left-color: var(--purple); }
+  .insight-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 14px; font-weight: 800; color: var(--text-primary); }
+  .insight-body { font-size: 12px; color: var(--text-secondary); font-weight: 500; line-height: 1.5; }
+
+  /* Correlation Heatmap */
+  .corr-toggle-bar { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; }
+  .corr-toggle-btn {
+    border: 1px solid var(--border-card); background: var(--border-light); padding: 5px 12px; border-radius: 6px;
+    font-size: 11px; font-weight: 700; cursor: pointer; color: var(--text-secondary); transition: var(--transition);
+  }
+  .corr-toggle-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+  .heatmap-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 12px; }
+  .heatmap-table th, .heatmap-table td { padding: 9px 8px; border: 1px solid var(--border-card); }
+  .heatmap-table th { background: var(--border-light); font-weight: 700; color: var(--text-secondary); }
+
+  /* Institutional Rental Yield Estimator */
+  .yield-container {
+    background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius-lg);
+    padding: 32px; box-shadow: var(--shadow); display: grid; grid-template-columns: 1fr 1.3fr; gap: 32px; align-items: center;
+    margin-bottom: 24px;
+  }
+  .yield-controls { display: flex; flex-direction: column; gap: 16px; }
+  .yield-slider-group { display: flex; flex-direction: column; gap: 5px; }
+  .yield-slider-header { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--text-secondary); }
+  .yield-slider { width: 100%; height: 6px; accent-color: var(--primary-accent); border-radius: 3px; outline: none; }
+  .yield-metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .yield-metric-card {
+    background: var(--border-light); border: 1px solid var(--border-card); border-radius: var(--radius-md);
+    padding: 18px; display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .yield-metric-label { font-size: 11px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+  .yield-metric-val { font-size: 24px; font-weight: 800; color: var(--text-primary); margin: 6px 0 2px 0; }
+  .yield-metric-sub { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+
+  /* 10Y Horizon Simulator */
+  .sim-container {
+    background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+    color: white; border-radius: var(--radius-lg); padding: 32px; box-shadow: var(--shadow-hover);
+    margin-bottom: 24px;
+  }
+  .sim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }
+  .sim-controls label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; opacity: 0.9; }
+  .sim-slider { width: 100%; height: 7px; background: rgba(255,255,255,0.25); border-radius: 4px; outline: none; margin-bottom: 18px; accent-color: #38bdf8; }
+  .sim-result-box {
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); border-radius: 14px;
+    padding: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; text-align: center;
+  }
+  .sim-val-large { font-size: 28px; font-weight: 800; color: #38bdf8; }
+
+  /* Segment Duel */
+  .duel-container { background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius-lg); padding: 28px; box-shadow: var(--shadow); margin-bottom: 24px; }
+  .duel-selectors { display: flex; gap: 20px; align-items: center; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+  .duel-selector-box { display: flex; align-items: center; gap: 10px; background: var(--border-light); padding: 10px 18px; border-radius: 8px; border: 1px solid var(--border-card); }
+  .duel-vs { font-weight: 800; color: var(--text-muted); font-size: 16px; }
+  .duel-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  .duel-table th, .duel-table td { padding: 12px 18px; text-align: left; font-size: 12px; border-bottom: 1px solid var(--border-light); }
+  .duel-table th { font-weight: 700; color: var(--text-secondary); background: var(--border-light); }
+  .duel-delta { font-weight: 800; font-size: 12px; }
+  .duel-delta.positive { color: var(--success); }
+  .duel-delta.negative { color: #e11d48; }
+
+  /* Data Quality / Trust Panel */
+  .quality-panel {
+    background: var(--bg-card); border: 1px dashed var(--border-card); border-radius: var(--radius-lg);
+    padding: 22px 26px; margin-bottom: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 18px;
+  }
+  .quality-metric { display: flex; flex-direction: column; }
+  .quality-metric span:first-child { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+  .quality-metric span:last-child { font-size: 14px; font-weight: 800; color: var(--text-primary); margin-top: 4px; }
+
+  /* Methodology Grid */
+  .methodology-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 20px; margin-bottom: 28px; }
+  .methodology-item { background: var(--border-light); padding: 18px; border-radius: 8px; border: 1px solid var(--border-card); }
+  .methodology-item h4 { font-size: 13px; font-weight: 800; color: var(--text-primary); margin-bottom: 5px; display: flex; align-items: center; gap: 6px; }
+  .methodology-item p { font-size: 12px; color: var(--text-secondary); line-height: 1.5; font-weight: 500; }
+
+  /* Data Explorer Table */
+  .explorer-card { background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius-lg); padding: 26px; box-shadow: var(--shadow); }
+  .explorer-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 18px; flex-wrap: wrap; }
+  .search-input { padding: 9px 15px; border: 1px solid var(--border-card); border-radius: 8px; font-size: 12px; width: 330px; outline: none; background: var(--bg-card); color: var(--text-primary); }
+  .search-input:focus { border-color: var(--primary-accent); }
+  .table-responsive { width: 100%; overflow-x: auto; max-height: 520px; border: 1px solid var(--border-light); border-radius: 10px; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .data-table th {
+    background: var(--border-light); padding: 11px 13px; font-weight: 700; text-align: left; color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-card); position: sticky; top: 0; z-index: 5; cursor: pointer; user-select: none;
+  }
+  .data-table th:hover { color: var(--primary); }
+  .data-table td { padding: 10px 13px; border-bottom: 1px solid var(--border-light); color: var(--text-primary); }
+  .data-table tr:hover { background: var(--border-light); }
+
+  .badge-cell { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .badge-compound { background: #e0f2fe; color: #0284c7; }
+  .badge-basic { background: #f1f5f9; color: #475569; }
+  .badge-superlux { background: #ecfdf5; color: #059669; }
+  .badge-semi { background: #fef3c7; color: #d97706; }
+  .badge-valid-geo { background: #dcfce7; color: #166534; font-size: 10px; }
+  .badge-unresolved-geo { background: #fee2e2; color: #991b1b; font-size: 10px; }
+
+  [data-theme="dark"] .badge-compound { background: #0c4a6e; color: #38bdf8; }
+  [data-theme="dark"] .badge-basic { background: #1e293b; color: #cbd5e1; }
+  [data-theme="dark"] .badge-superlux { background: #064e3b; color: #34d399; }
+  [data-theme="dark"] .badge-semi { background: #78350f; color: #fbbf24; }
+  [data-theme="dark"] .badge-valid-geo { background: #064e3b; color: #a7f3d0; }
+  [data-theme="dark"] .badge-unresolved-geo { background: #7f1d1d; color: #fecaca; }
+
+  .pagination-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; font-size: 12px; color: var(--text-secondary); }
+  .page-btns { display: flex; gap: 8px; }
+  .page-btn { padding: 6px 13px; border: 1px solid var(--border-card); background: var(--bg-card); color: var(--text-primary); border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 11px; }
+  .page-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-export { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; transition: var(--transition); }
+  .btn-export:hover { filter: brightness(1.15); }
+
+  /* Floating Bottom Slide Controller */
+  .slide-bottom-bar {
+    position: fixed;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: 30px;
+    padding: 8px 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 1000;
+  }
+  .slide-btn-arrow {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 7px 15px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  .slide-btn-arrow:hover { filter: brightness(1.15); }
+  .slide-btn-arrow:disabled { opacity: 0.4; cursor: not-allowed; }
+  .slide-indicator { font-size: 12px; font-weight: 700; color: var(--text-primary); white-space: nowrap; }
+
+  /* Modal Details */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+  .modal-overlay.active { display: flex; }
+  .modal { background: var(--bg-card); border-radius: 18px; width: 90%; max-width: 600px; padding: 26px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 1px solid var(--border-card); }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-light); padding-bottom: 12px; }
+  .modal-close { border: none; background: transparent; font-size: 22px; cursor: pointer; color: var(--text-muted); }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; margin-bottom: 16px; }
+  .modal-item { background: var(--border-light); padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-card); }
+  .modal-item span:first-child { display: block; font-size: 10px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; }
+  .modal-item span:last-child { font-weight: 800; font-size: 13px; color: var(--text-primary); margin-top: 2px; }
+
+  @media (max-width: 1024px) {
+    .col-8, .col-7, .col-6, .col-5, .col-4 { grid-column: span 12; }
+    .sim-grid, .yield-container { grid-template-columns: 1fr; }
+    .container { padding: 18px; }
+    .slide-tabs { padding: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Top Navigation -->
+<header class="navbar">
+  <div class="brand">
+    <div class="brand-logo">EG</div>
+    <div class="brand-text">
+      <h1>Egypt Real Estate Intelligence Platform</h1>
+      <p>Executive analytics and verified geospatial market intelligence.</p>
+    </div>
+  </div>
+  <div class="nav-right">
+    <button class="theme-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+      <span id="themeIcon">🌙</span> <span id="themeLabel">Dark Mode</span>
+    </button>
+  </div>
+</header>
+
+<!-- Presentation Slide Tabs Navigation -->
+<nav class="slide-nav-container">
+  <div class="slide-tabs">
+    <button class="slide-tab active" id="tabSlide1" onclick="goToSlide(1)">
+      <span class="slide-tab-num">1</span> 👔 Executive Brief
+    </button>
+    <button class="slide-tab" id="tabSlide2" onclick="goToSlide(2)">
+      <span class="slide-tab-num">2</span> 🗺️ Geospatial Map
+    </button>
+    <button class="slide-tab" id="tabSlide3" onclick="goToSlide(3)">
+      <span class="slide-tab-num">3</span> 📊 Price & Drivers
+    </button>
+    <button class="slide-tab" id="tabSlide4" onclick="goToSlide(4)">
+      <span class="slide-tab-num">4</span> 💼 Investment & Yield
+    </button>
+    <button class="slide-tab" id="tabSlide5" onclick="goToSlide(5)">
+      <span class="slide-tab-num">5</span> ⏳ Delivery & Trends
+    </button>
+    <button class="slide-tab" id="tabSlide6" onclick="goToSlide(6)">
+      <span class="slide-tab-num">6</span> 🛡️ Data Trust & Audit
+    </button>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- Persistent Market Pulse Ribbon (Brief & Concise) -->
+  <div class="market-pulse">
+    <div class="pulse-badge">
+      <div class="pulse-dot"></div>
+      MARKET PULSE
+    </div>
+    <div class="pulse-items">
+      <div class="pulse-item">Median Price: <strong id="pulseMedianPrice">5.08M EGP</strong></div>
+      <div class="pulse-item">Median Rate: <strong id="pulseMedianPPM">36,583 EGP/m²</strong></div>
+      <div class="pulse-item">Typical Area: <strong id="pulseMedianArea">148 m²</strong></div>
+      <div class="pulse-item">Compound listings show observed median price premium.</div>
+      <div class="pulse-item">Active Sample: <strong id="pulseFilterCount">10,000 / 10,000</strong></div>
+    </div>
+  </div>
+
+  <!-- Persistent Investor Persona Presets -->
+  <div class="persona-ribbon">
+    <div class="persona-title">
+      <span>🎯</span> Investor Persona Presets:
+    </div>
+    <div class="persona-chips">
+      <button class="persona-chip active" id="persona_all" onclick="applyPersona('all')">🌐 All Properties (10,000)</button>
+      <button class="persona-chip" id="persona_starter" onclick="applyPersona('starter')">🎯 First-Time Buyer (≤3.5M EGP)</button>
+      <button class="persona-chip" id="persona_growth" onclick="applyPersona('growth')">💼 High-Growth Gated Compounds</button>
+      <button class="persona-chip" id="persona_luxury" onclick="applyPersona('luxury')">👑 Ultra-Luxury Tier (≥9M EGP)</button>
+      <button class="persona-chip" id="persona_coastal" onclick="applyPersona('coastal')">🏖️ Coastal and Vacation Retreats</button>
+      <button class="persona-chip" id="persona_rental" onclick="applyPersona('rental')">⚡ High-Yield Rental Targets</button>
+    </div>
+  </div>
+
+  <!-- Persistent Global Slicing Filter Suite -->
+  <div class="filter-bar">
+    <div class="filter-top">
+      <div class="filter-title">
+        <span>⚡</span> Interactive Filter and Slicing Suite
+      </div>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <span id="filteredRecordsLabel" style="font-size: 11px; font-weight: 700; color: var(--text-secondary);">Showing 10,000 listings</span>
+        <button class="filter-reset-btn" onclick="resetFilters()">↺ Reset Filters</button>
+      </div>
+    </div>
+    <div class="filter-grid">
+      <div class="filter-group">
+        <label class="filter-label">Community Setting</label>
+        <select class="filter-select" id="filterAmenities" onchange="applyFilters()">
+          <option value="ALL">All Communities (Compound & Standalone)</option>
+          <option value="Gated Compound">Gated Compound (37.5%)</option>
+          <option value="Standalone (Non-Compound)">Standalone / Non-Compound (62.5%)</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Finishing Condition</label>
+        <select class="filter-select" id="filterFinishing" onchange="applyFilters()">
+          <option value="ALL">All Finishes</option>
+          <option value="superlux">Super Lux (56.9%)</option>
+          <option value="semi">Semi-Finished (31.7%)</option>
+          <option value="without">Core & Shell (11.4%)</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">View Orientation</label>
+        <select class="filter-select" id="filterView" onchange="applyFilters()">
+          <option value="ALL">All Views</option>
+          <option value="Inner">Inner (Courtyard, Pool, Garden)</option>
+          <option value="Outer">Outer (Street, Open, Sea)</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Listing Purpose</label>
+        <select class="filter-select" id="filterType" onchange="applyFilters()">
+          <option value="ALL">All Purposes</option>
+          <option value="Own">Residential Ownership (75.7%)</option>
+          <option value="Investment">Investment Inventory (24.3%)</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Bedrooms Count</label>
+        <select class="filter-select" id="filterRooms" onchange="applyFilters()">
+          <option value="ALL">Any Bedroom Count</option>
+          <option value="1">1 Bedroom</option>
+          <option value="2">2 Bedrooms</option>
+          <option value="3">3 Bedrooms</option>
+          <option value="4">4 Bedrooms</option>
+          <option value="5">5 Bedrooms</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Max Price Limit</label>
+        <input type="number" class="filter-input" id="filterMaxPrice" placeholder="e.g. 20M" min="1" max="100" oninput="applyFilters()">
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Minimum Sample Size</label>
+        <select class="filter-select" id="filterMinSample" onchange="applyFilters()">
+          <option value="5">n ≥ 5 listings</option>
+          <option value="15" selected>n ≥ 15 listings (Default)</option>
+          <option value="25">n ≥ 25 listings</option>
+          <option value="50">n ≥ 50 listings</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Geographic Data Status</label>
+        <select class="filter-select" id="filterGeoStatus" onchange="applyFilters()">
+          <option value="ALL">All Listings (10,000)</option>
+          <option value="VALID_GEO" selected>Geographically Verified (9,598)</option>
+          <option value="UNRESOLVED_MARKETING">Unresolved Marketing Text (402)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Primary Strategic KPI Ribbon -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-bar"></div>
+      <div class="kpi-label">Median Property Price</div>
+      <div class="kpi-value" id="kpiMedianPrice">5.08M <small style="font-size: 15px; font-weight: 700;">EGP</small></div>
+      <div class="kpi-sub">Central half spans 3.64M to 7.37M EGP.</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-bar emerald"></div>
+      <div class="kpi-label">Median Rate Per Meter</div>
+      <div class="kpi-value" id="kpiMedianPPM">36,583 <small style="font-size: 15px; font-weight: 700;">EGP/m²</small></div>
+      <div class="kpi-sub">Central transaction rate across verified sample.</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-bar cyan"></div>
+      <div class="kpi-label">Typical Living Area</div>
+      <div class="kpi-value" id="kpiMedianArea">148 <small style="font-size: 15px; font-weight: 700;">m²</small></div>
+      <div class="kpi-sub">Verified physical identity: price equals area times rate.</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-bar purple"></div>
+      <div class="kpi-label">Model-Projected Ten-Year Price</div>
+      <div class="kpi-value" id="kpiMedian10Y">9.88M <small style="font-size: 15px; font-weight: 700;">EGP</small></div>
+      <div class="kpi-sub">Calibrated ten-year machine learning forecast.</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-bar amber"></div>
+      <div class="kpi-label">Verified Listings Sample</div>
+      <div class="kpi-value" id="kpiTotalVolume">10,000</div>
+      <div class="kpi-sub">Canonical dataset with verified accounting identity.</div>
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- SLIDE 1: 👔 EXECUTIVE BRIEF -->
+  <!-- ================================================================= -->
+  <section class="slide-view active" id="slide1">
+    <div class="slide-header">
+      <div>
+        <h2>👔 Executive Market Briefing</h2>
+        <p>High-level overview of housing valuation and market inventory.</p>
+      </div>
+      <span style="font-size:12px; font-weight:800; color:var(--text-muted);">SLIDE 1 OF 6</span>
+    </div>
+
+    <!-- 4 Punchy Takeaway Cards (Strict 3 to 9 words) -->
+    <div class="insights-grid">
+      <div class="insight-card success">
+        <div class="insight-header">🏆 Compound vs Standalone Price Variance</div>
+        <div class="insight-body">Higher finishing quality drives compound price difference.</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-header">📐 Living Area Dictates Room Layout</div>
+        <div class="insight-body">Area governs room count layout predictably.</div>
+      </div>
+      <div class="insight-card purple">
+        <div class="insight-header">💎 Location Rate Drives Market Variance</div>
+        <div class="insight-body">Unit rate drives seventy-nine percent of price variance.</div>
+      </div>
+      <div class="insight-card warning">
+        <div class="insight-header">📈 Calibrated Ten-Year ML Forecasts</div>
+        <div class="insight-body">Ten-year capital appreciation modeled via ensemble algorithms.</div>
+      </div>
+    </div>
+
+    <div class="grid-12">
+      <div class="col-8 card">
+        <div class="card-top">
+          <div class="card-title-group">
+            <h3>Observed Valuation vs Ten-Year ML Projections</h3>
+            <p>Observational comparison across community settings.</p>
+          </div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chartExecutiveAppreciation"></canvas>
+        </div>
+      </div>
+      <div class="col-4 card">
+        <div class="card-top">
+          <div class="card-title-group">
+            <h3>Finishing Condition Breakdown</h3>
+            <p>Turnkey superlux, semi-finished, and core inventory.</p>
+          </div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chartFinishingDonut"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================= -->
+  <!-- SLIDE 2: 🗺️ GEOSPATIAL INTELLIGENCE -->
+  <!-- ================================================================= -->
+  <section class="slide-view" id="slide2">
+    <div class="slide-header">
+      <div>
+        <h2>🗺️ Geospatial Intelligence and Location Corridors</h2>
+        <p>Interactive spatial distribution across verified Egyptian hubs.</p>
+      </div>
+      <span style="font-size:12px; font-weight:800; color:var(--text-muted);">SLIDE 2 OF 6</span>
+    </div>
+
+    <div class="card">
+      <div class="map-header-controls">
+        <div style="font-size: 12px; font-weight: 800; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
+          <span>🌐</span> Geospatial Analytical Layer:
+        </div>
+        <div class="heatmap-switcher">
+          <button class="heatmap-btn active" id="btnHeatDensity" onclick="switchHeatmapLayer('density')">🔥 Supply Density</button>
+          <button class="heatmap-btn" id="btnHeatPPM" onclick="switchHeatmapLayer('ppm')">💎 Price / m² Hotspots (4b)</button>
+          <button class="heatmap-btn" id="btnHeatGrowth" onclick="switchHeatmapLayer('growth')">📈 10-Year Growth Corridor</button>
+        </div>
+      </div>
+      <div id="mapContainer"></div>
+      <div class="map-legend" id="mapLegendText">
+        <span style="font-weight: 800; color: var(--text-primary);">District Rate Tiers:</span>
+        <div class="map-legend-item"><div class="map-legend-dot" style="background: #10b981;"></div> Below 35K EGP/m² (Affordable / Emerging)</div>
+        <div class="map-legend-item"><div class="map-legend-dot" style="background: #3b82f6;"></div> 35K – 50K EGP/m² (Established Urban)</div>
+        <div class="map-legend-item"><div class="map-legend-dot" style="background: #8b5cf6;"></div> 50K – 70K EGP/m² (Prime Gated Compound)</div>
+        <div class="map-legend-item"><div class="map-legend-dot" style="background: #e11d48;"></div> 70K+ EGP/m² (Ultra Luxury Enclave)</div>
+      </div>
+      <div class="map-notice">
+        ℹ️ Unresolved marketing text isolated from map coordinates.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-title-group">
+          <h3 id="topLocTitle">Location Rankings by Observed Median Price</h3>
+          <p id="topLocSubtitle">Rankings filtered by verified minimum sample sizes.</p>
+        </div>
+      </div>
+      <div class="chart-wrapper">
+        <canvas id="chartTopLocations"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================= -->
+  <!-- SLIDE 3: 📊 PRICE DYNAMICS & DRIVERS -->
+  <!-- ================================================================= -->
+  <section class="slide-view" id="slide3">
+    <div class="slide-header">
+      <div>
+        <h2>📊 Price Dynamics and Valuation Drivers</h2>
+        <p>Deconstructing property prices and physical layout scaling.</p>
+      </div>
+      <span style="font-size:12px; font-weight:800; color:var(--text-muted);">SLIDE 3 OF 6</span>
+    </div>
+
+    <div class="grid-12">
+      <div class="col-6 card">
+        <div class="card-top">
+          <div class="card-title-group">
+            <h3>Property Price Frequency Distribution</h3>
+            <p>Right-skewed pricing with luxury villa outliers.</p>
+          </div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chartPriceHist"></canvas>
+        </div>
+      </div>
+      <div class="col-6 card">
+        <div class="card-top">
+          <div class="card-title-group">
+            <h3>Living Space Area Distribution</h3>
+            <p>Apartment sizing concentrations across standard layouts.</p>
+          </div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chartAreaHist"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-12">
+      <div class="col-6 card">
+        <div class="card-top">
+          <div class="card-title-group">
+            <h3>Price vs Living Area Scaling</h3>
+            <p>Physical scaling across compound and standalone units.</p>
+          </div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chartScatter"></canvas>
+        </div>
+      </div>
+      <div class="col-6 card">
+        <div class="card-top">
+          <div class="card-title-group">
+            <h3>Valuation Driver Feature Waterfall</h3>
+            <p>Step-by-step price build-up across asset attributes.</p>
+          </div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chartWaterfall"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================= -->
+  <!-- SLIDE 4: 💼 FINANCIALS & YIELD -->
+  <!-- ================================================================= -->
+  <section class="slide-view" id="slide4">
+    <div class="slide-header">
+      <div>
+        <h2>💼 Financial Underwriting and Investment Forecasts</h2>
+        <p>Dynamic cash-flow modeling and leveraged equity simulations.</p>
+      </div>
+      <span style="font-size:12px; font-weight:800; color:var(--text-muted);">SLIDE 4 OF 6</span>
+    </div>
+
+    <!-- Rental Yield Underwriting Engine -->
+    <div class="yield-container">
+      <div class="yield-controls">
+        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-primary);">Commercial Rental Underwriting Engine</h3>
+        <p style="font-size: 12px; color: var(--text-secondary); font-weight: 500;">Simulate cash flows, operating reserves, and net yields.</p>
+        
+        <div class="yield-slider-group">
+          <div class="yield-slider-header">
+            <span>Target Gross Rental Yield</span>
+            <b id="lblGrossYield" style="color: var(--primary);">7.5% Annual</b>
+          </div>
+          <input type="range" class="yield-slider" id="slGrossYield" min="4.0" max="12.0" step="0.25" value="7.5" oninput="updateYieldEstimator()">
+        </div>
+
+        <div class="yield-slider-group">
+          <div class="yield-slider-header">
+            <span>Operating Expenses & Vacancy</span>
+            <b id="lblOpEx" style="color: var(--warning);">12.0% OpEx</b>
+          </div>
+          <input type="range" class="yield-slider" id="slOpEx" min="5.0" max="25.0" step="1.0" value="12.0" oninput="updateYieldEstimator()">
+        </div>
+
+        <div class="yield-slider-group">
+          <div class="yield-slider-header">
+            <span>Acquisition Equity Stake</span>
+            <b id="lblEquityStake" style="color: var(--success);">100% Cash Purchase</b>
+          </div>
+          <input type="range" class="yield-slider" id="slEquityStake" min="20.0" max="100.0" step="5.0" value="100.0" oninput="updateYieldEstimator()">
+        </div>
+      </div>
+
+      <div class="yield-metrics-grid">
+        <div class="yield-metric-card">
+          <div class="yield-metric-label">Estimated Monthly Rent</div>
+          <div class="yield-metric-val" id="valMonthlyRent">31,750 <small style="font-size:12px;">EGP</small></div>
+          <div class="yield-metric-sub" id="subAnnualGross">Gross Annual: 381,000 EGP</div>
+        </div>
+        <div class="yield-metric-card">
+          <div class="yield-metric-label">Net Operating Income (NOI)</div>
+          <div class="yield-metric-val" id="valAnnualNOI" style="color: var(--success);">335,280 <small style="font-size:12px;">EGP</small></div>
+          <div class="yield-metric-sub">After OpEx & Vacancy Deductions</div>
+        </div>
+        <div class="yield-metric-card">
+          <div class="yield-metric-label">Net Capitalization Rate</div>
+          <div class="yield-metric-val" id="valNetCapRate" style="color: var(--cyan);">6.60%</div>
+          <div class="yield-metric-sub">Net Property Yield on Asset</div>
+        </div>
+        <div class="yield-metric-card">
+          <div class="yield-metric-label">Cash-on-Cash Equity Return</div>
+          <div class="yield-metric-val" id="valCashOnCash" style="color: var(--purple);">6.60%</div>
+          <div class="yield-metric-sub" id="valPaybackYears">Est. Payback: 15.2 Years</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10Y Horizon Simulator -->
+    <div class="sim-container">
+      <div class="sim-grid">
+        <div class="sim-controls">
+          <h3 style="font-size: 18px; margin-bottom: 6px; font-weight: 800;">Ten-Year Leveraged Equity Calculator</h3>
+          <p style="font-size: 12px; opacity: 0.85; margin-bottom: 18px;">Simulate future appreciation and equity returns dynamically.</p>
+          <label>Holding Period: <b id="simYearsLabel">10 Years (2036)</b></label>
+          <input type="range" class="sim-slider" id="simYears" min="3" max="15" value="10" oninput="updateSim()">
+          <label>Down Payment Equity: <b id="simDownLabel">25% Equity Stake</b></label>
+          <input type="range" class="sim-slider" id="simDown" min="10" max="100" step="5" value="25" oninput="updateSim()">
+        </div>
+        <div class="sim-result-box">
+          <div>
+            <div style="font-size: 11px; opacity: 0.8; margin-bottom: 4px;">PROJECTED ASSET VALUE</div>
+            <div class="sim-val-large" id="simProjectedVal">9.88M</div>
+            <div style="font-size: 11px; opacity: 0.85; margin-top: 4px;" id="simBaseVal">Current: 5.08M EGP</div>
+          </div>
+          <div>
+            <div style="font-size: 11px; opacity: 0.8; margin-bottom: 4px;">PROJECTED CAPITAL GAIN</div>
+            <div class="sim-val-large" style="color: #4ade80;" id="simGainVal">+4.80M</div>
+            <div style="font-size: 11px; opacity: 0.85; margin-top: 4px;" id="simROIVal">Equity Return: +378%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Segment Duel -->
+    <div class="duel-container">
+      <div class="card-top" style="margin-bottom: 14px;">
+        <div class="card-title-group">
+          <h3>Segment Duel Observational Benchmark</h3>
+          <p>Direct parametric comparison between selected housing segments.</p>
+        </div>
+      </div>
+      <div class="duel-selectors">
+        <div class="duel-selector-box">
+          <span style="font-size: 12px; font-weight: 700;">Segment A:</span>
+          <select class="filter-select" id="duelSegmentA" onchange="updateDuel()">
+            <option value="compound">Gated Compounds</option>
+            <option value="superlux">Superlux Finished</option>
+            <option value="inner">Inner View (Courtyard/Pool)</option>
+            <option value="investment">Investment Units</option>
+          </select>
+        </div>
+        <div class="duel-vs">VS</div>
+        <div class="duel-selector-box">
+          <span style="font-size: 12px; font-weight: 700;">Segment B:</span>
+          <select class="filter-select" id="duelSegmentB" onchange="updateDuel()">
+            <option value="basic">Standalone / Non-Compound</option>
+            <option value="semi">Semi-Finished</option>
+            <option value="outer">Outer View (Street/Open)</option>
+            <option value="own">Residential Own</option>
+          </select>
+        </div>
+      </div>
+
+      <table class="duel-table">
+        <thead>
+          <tr>
+            <th>Analytical Metric</th>
+            <th id="duelHeaderA">Segment A</th>
+            <th id="duelHeaderB">Segment B</th>
+            <th>Observed Variance (A vs B)</th>
+          </tr>
+        </thead>
+        <tbody id="duelBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================================================================= -->
+  <!-- SLIDE 5: ⏳ DELIVERY & CORRELATION -->
+  <!-- ================================================================= -->
+  <section class="slide-view" id="slide5">
+    <div class="slide-header">
+      <div>
+        <h2>⏳ Project Delivery Pipeline and Attribute Correlations</h2>
+        <p>Evaluating scheduled handover years and empirical correlations.</p>
+      </div>
+      <span style="font-size:12px; font-weight:800; color:var(--text-muted);">SLIDE 5 OF 6</span>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-title-group">
+          <h3>Price Trend by Scheduled Handover Year</h3>
+          <p>Pricing progression across ready and off-plan pipelines.</p>
+        </div>
+      </div>
+      <div class="chart-wrapper">
+        <canvas id="chartTemporal"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-title-group">
+          <h3>Pearson Correlation Dependency Matrix</h3>
+          <p>Genuine dependencies without mechanically induced collinearity.</p>
+        </div>
+      </div>
+      <div class="corr-toggle-bar">
+        <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);">Perspective:</span>
+        <button class="corr-toggle-btn active" id="btnCorrStruct" onclick="switchCorrelationView('structural')">
+          Structural Matrix (Independent)
+        </button>
+        <button class="corr-toggle-btn" id="btnCorrOverall" onclick="switchCorrelationView('overall')">
+          Overall Matrix (Total Price)
+        </button>
+      </div>
+      <div style="overflow-x: auto;">
+        <table class="heatmap-table" id="heatmapTable"></table>
+      </div>
+      <div id="corrNotice" style="margin-top: 12px; font-size: 11px; color: var(--text-secondary); line-height: 1.5; font-weight: 500;">
+        🔬 Structural View Active: Excludes total price to prevent mechanical endogeneity.
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================= -->
+  <!-- SLIDE 6: 🛡️ DATA TRUST & AUDIT -->
+  <!-- ================================================================= -->
+  <section class="slide-view" id="slide6">
+    <div class="slide-header">
+      <div>
+        <h2>🛡️ Data Trust, Technical Methodology and Explorer</h2>
+        <p>Verified dataset health metrics and searchable listing explorer.</p>
+      </div>
+      <span style="font-size:12px; font-weight:800; color:var(--text-muted);">SLIDE 6 OF 6</span>
+    </div>
+
+    <!-- Data Quality Metrics -->
+    <div class="quality-panel">
+      <div class="quality-metric">
+        <span>Canonical Records</span>
+        <span>10,000 Verified Units</span>
+      </div>
+      <div class="quality-metric">
+        <span>Geographically Mapped</span>
+        <span style="color: var(--success);">9,598 Units (96%)</span>
+      </div>
+      <div class="quality-metric">
+        <span>Unresolved Marketing</span>
+        <span style="color: var(--warning);">402 Units (4%)</span>
+      </div>
+      <div class="quality-metric">
+        <span>Exact Duplicate Rows</span>
+        <span>41 Preserved (0.41%)</span>
+      </div>
+      <div class="quality-metric">
+        <span>Missing Bathrooms Imputed</span>
+        <span>33 Units (0.33%)</span>
+      </div>
+      <div class="quality-metric">
+        <span>ML Model Projections</span>
+        <span style="color: var(--primary-accent);">2,431 Units (24%)</span>
+      </div>
+    </div>
+
+    <!-- Methodology Cards (Strict 3 to 9 words per body) -->
+    <div class="methodology-grid">
+      <div class="methodology-item">
+        <h4>📁 Canonical Data Provenance</h4>
+        <p>Expanded from initial base into ten thousand records.</p>
+      </div>
+      <div class="methodology-item">
+        <h4>📐 Physical Accounting Identity</h4>
+        <p>Price equals area times rate verified across all records.</p>
+      </div>
+      <div class="methodology-item">
+        <h4>⏳ Handover Year Semantics</h4>
+        <p>Vintage completions through future off-plan delivery dates.</p>
+      </div>
+      <div class="methodology-item">
+        <h4>🗺️ Geographic Data Isolation</h4>
+        <p>Unresolved descriptive phrases isolated from spatial coordinates.</p>
+      </div>
+      <div class="methodology-item">
+        <h4>🤖 Ensemble Valuation Engine</h4>
+        <p>Machine learning ensemble trained on investment properties.</p>
+      </div>
+      <div class="methodology-item">
+        <h4>⚖️ Observational Inferences Only</h4>
+        <p>Sample differences reflect observational data without causal claims.</p>
+      </div>
+    </div>
+
+    <!-- Data Explorer Table -->
+    <div class="explorer-card">
+      <div class="explorer-top">
+        <input type="text" class="search-input" id="tableSearch" placeholder="Search by location, finish, view, macro-region..." oninput="onTableSearch()">
+        <button class="btn-export" onclick="exportFilteredCSV()">📥 Export Filtered CSV</button>
+      </div>
+      <div class="table-responsive">
+        <table class="data-table" id="dataTable">
+          <thead>
+            <tr>
+              <th onclick="sortTable(9)">Normalized Location ⬍</th>
+              <th onclick="sortTable(16)">Geo Status ⬍</th>
+              <th onclick="sortTable(0)">Price (EGP) ⬍</th>
+              <th onclick="sortTable(1)">Rate/m² ⬍</th>
+              <th onclick="sortTable(2)">Area (m²) ⬍</th>
+              <th onclick="sortTable(3)">Beds ⬍</th>
+              <th onclick="sortTable(4)">Baths ⬍</th>
+              <th onclick="sortTable(6)">Delivery Year ⬍</th>
+              <th onclick="sortTable(11)">Setting ⬍</th>
+              <th onclick="sortTable(13)">Finishing ⬍</th>
+              <th onclick="sortTable(15)">10Y Valuation ⬍</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination-bar">
+        <span id="pageInfo">Showing 1 to 25 of 10,000 entries</span>
+        <div class="page-btns">
+          <button class="page-btn" id="btnPrev" onclick="changePage(-1)">Previous</button>
+          <button class="page-btn" id="btnNext" onclick="changePage(1)">Next</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div> <!-- End Container -->
+
+<!-- Floating Bottom Slide Controller -->
+<div class="slide-bottom-bar">
+  <button class="slide-btn-arrow" id="btnPrevSlide" onclick="changeSlide(-1)">◀ Prev Slide</button>
+  <div class="slide-indicator" id="slideIndicator">Slide 1 of 6: Executive Brief</div>
+  <button class="slide-btn-arrow" id="btnNextSlide" onclick="changeSlide(1)">Next Slide ▶</button>
+</div>
+
+<!-- Record Detail Modal -->
+<div class="modal-overlay" id="detailModal" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 style="font-size: 16px; font-weight: 800;" id="modalLocation">Property Specification</h3>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div class="modal-grid">
+      <div class="modal-item"><span>Normalized Location</span><span id="mNormLoc">--</span></div>
+      <div class="modal-item"><span>Raw Location String</span><span id="mRawLoc" style="font-family:monospace; font-size:11px;">--</span></div>
+      <div class="modal-item"><span>Listing Price</span><span id="mPrice">--</span></div>
+      <div class="modal-item"><span>Price Per Meter</span><span id="mPPM">--</span></div>
+      <div class="modal-item"><span>Living Area</span><span id="mArea">--</span></div>
+      <div class="modal-item"><span>Layout</span><span id="mRooms">--</span></div>
+      <div class="modal-item"><span>Floor Level</span><span id="mFloor">--</span></div>
+      <div class="modal-item"><span>Delivery / Const. Year</span><span id="mYear">--</span></div>
+      <div class="modal-item"><span>Community Setting</span><span id="mAmenities">--</span></div>
+      <div class="modal-item"><span>Finishing Condition</span><span id="mFinishing">--</span></div>
+      <div class="modal-item"><span>View Orientation</span><span id="mView">--</span></div>
+      <div class="modal-item"><span>Geographic Status</span><span id="mGeoStatus">--</span></div>
+      <div class="modal-item"><span>Macro Region</span><span id="mMacroRegion">--</span></div>
+      <div class="modal-item"><span>10-Year Model Valuation</span><span id="m10Y" style="color: var(--success);">--</span></div>
+    </div>
+    <div style="background: var(--border-light); border: 1px solid var(--border-card); border-radius: 8px; padding: 10px; font-size: 11px; color: var(--text-secondary);">
+      💡 Physical accounting verified: price equals area times rate.
+    </div>
+  </div>
+</div>
+
+<script>
+// =========================================================================
+// MULTI-SLIDE PRESENTATION DASHBOARD ENGINE
+// =========================================================================
+const RAW_DATA = window.DASHBOARD_DATA;
+let filteredRecords = [...RAW_DATA.records];
+let currentPage = 1;
+const pageSize = 25;
+let currentSortCol = 0;
+let currentSortAsc = false;
+let chartInstances = {};
+let mapInstance = null;
+let mapMarkersLayer = null;
+let mapHeatLayer = null;
+let currentHeatMode = 'density';
+let currentTheme = 'light';
+let currentCorrView = 'structural';
+
+// Presentation Slide Controller
+let currentSlide = 1;
+const totalSlides = 6;
+const slideTitles = [
+  'Executive Brief',
+  'Geospatial Map',
+  'Price & Drivers',
+  'Investment & Yield',
+  'Delivery & Trends',
+  'Data Trust & Audit'
+];
+
+function goToSlide(slideNum) {
+  if (slideNum < 1 || slideNum > totalSlides) return;
+  currentSlide = slideNum;
+
+  // Update tabs
+  for (let i = 1; i <= totalSlides; i++) {
+    const tab = document.getElementById(`tabSlide${i}`);
+    const slide = document.getElementById(`slide${i}`);
+    if (tab) tab.classList.toggle('active', i === currentSlide);
+    if (slide) slide.classList.toggle('active', i === currentSlide);
+  }
+
+  // Update bottom indicator
+  document.getElementById('slideIndicator').innerText = `Slide ${currentSlide} of ${totalSlides}: ${slideTitles[currentSlide - 1]}`;
+  document.getElementById('btnPrevSlide').disabled = (currentSlide === 1);
+  document.getElementById('btnNextSlide').disabled = (currentSlide === totalSlides);
+
+  // Resize Leaflet map if navigating to Slide 2
+  if (currentSlide === 2 && mapInstance) {
+    setTimeout(() => { mapInstance.invalidateSize(); }, 200);
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function changeSlide(delta) {
+  goToSlide(currentSlide + delta);
+}
+
+// Keyboard arrow navigation
+window.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.key === 'ArrowRight') changeSlide(1);
+  if (e.key === 'ArrowLeft') changeSlide(-1);
+});
+
+// Formatting Helpers
+function fmtEGP(val) {
+  if (val >= 1e6) return (val / 1e6).toFixed(2) + 'M EGP';
+  return val.toLocaleString() + ' EGP';
+}
+function fmtNum(val) { return Math.round(val).toLocaleString(); }
+
+// Initialization
+window.addEventListener('DOMContentLoaded', () => {
+  initMap();
+  renderCorrelationHeatmap();
+  applyFilters();
+  initStaticCharts();
+  initWaterfallChart();
+  updateDuel();
+  updateYieldEstimator();
+  goToSlide(1);
+});
+
+// -------------------------------------------------------------------------
+// THEME SWITCHER
+// -------------------------------------------------------------------------
+function toggleTheme() {
+  currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  
+  const icon = document.getElementById('themeIcon');
+  const label = document.getElementById('themeLabel');
+  
+  if (currentTheme === 'dark') {
+    icon.innerText = '☀️';
+    label.innerText = 'Light Mode';
+  } else {
+    icon.innerText = '🌙';
+    label.innerText = 'Dark Mode';
+  }
+
+  if (mapInstance) {
+    mapInstance.eachLayer((layer) => {
+      if (layer instanceof L.TileLayer) {
+        mapInstance.removeLayer(layer);
+      }
+    });
+    const tileUrl = currentTheme === 'dark' 
+      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+    L.tileLayer(tileUrl, {
+      attribution: '&copy; CARTO, OpenStreetMap',
+      maxZoom: 19
+    }).addTo(mapInstance);
+    if (mapHeatLayer) mapHeatLayer.bringToFront();
+    if (mapMarkersLayer) mapMarkersLayer.bringToFront();
+  }
+
+  updateChartsTheme();
+}
+
+function updateChartsTheme() {
+  const isDark = currentTheme === 'dark';
+  const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9';
+  const tickColor = isDark ? '#94a3b8' : '#475569';
+
+  Object.values(chartInstances).forEach(ch => {
+    if (!ch || !ch.options || !ch.options.scales) return;
+    if (ch.options.scales.x) {
+      if (ch.options.scales.x.grid) ch.options.scales.x.grid.color = gridColor;
+      if (ch.options.scales.x.ticks) ch.options.scales.x.ticks.color = tickColor;
+    }
+    if (ch.options.scales.y) {
+      if (ch.options.scales.y.grid) ch.options.scales.y.grid.color = gridColor;
+      if (ch.options.scales.y.ticks) ch.options.scales.y.ticks.color = tickColor;
+    }
+    ch.update();
+  });
+}
+
+// -------------------------------------------------------------------------
+// PERSONA PRESETS
+// -------------------------------------------------------------------------
+function applyPersona(personaKey) {
+  document.querySelectorAll('.persona-chip').forEach(c => c.classList.remove('active'));
+  const btn = document.getElementById(`persona_${personaKey}`);
+  if (btn) btn.classList.add('active');
+
+  document.getElementById('filterAmenities').value = 'ALL';
+  document.getElementById('filterFinishing').value = 'ALL';
+  document.getElementById('filterView').value = 'ALL';
+  document.getElementById('filterType').value = 'ALL';
+  document.getElementById('filterRooms').value = 'ALL';
+  document.getElementById('filterMaxPrice').value = '';
+  document.getElementById('filterGeoStatus').value = 'ALL';
+  document.getElementById('tableSearch').value = '';
+
+  if (personaKey === 'starter') {
+    document.getElementById('filterMaxPrice').value = '3.5';
+  } else if (personaKey === 'growth') {
+    document.getElementById('filterAmenities').value = 'Gated Compound';
+    document.getElementById('filterFinishing').value = 'superlux';
+  } else if (personaKey === 'luxury') {
+    document.getElementById('filterFinishing').value = 'superlux';
+    document.getElementById('filterAmenities').value = 'Gated Compound';
+    filteredRecords = RAW_DATA.records.filter(r => r[0] >= 9000000 && r[2] >= 180);
+    currentPage = 1;
+    updateKPIs();
+    updateDynamicCharts();
+    renderTable();
+    updateSim();
+    updateYieldEstimator();
+    return;
+  } else if (personaKey === 'coastal') {
+    document.getElementById('tableSearch').value = 'Alexandria';
+    onTableSearch();
+    return;
+  } else if (personaKey === 'rental') {
+    document.getElementById('filterRooms').value = '2';
+    document.getElementById('filterFinishing').value = 'superlux';
+  }
+
+  applyFilters();
+}
+
+// -------------------------------------------------------------------------
+// GEOSPATIAL MAP & HEATMAP
+// -------------------------------------------------------------------------
+function initMap() {
+  if (typeof L === 'undefined') return;
+
+  mapInstance = L.map('mapContainer', {
+    center: [30.044, 31.235],
+    zoom: 10,
+    minZoom: 6,
+    maxZoom: 16
+  });
+
+  const tileUrl = currentTheme === 'dark' 
+    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+
+  L.tileLayer(tileUrl, {
+    attribution: '&copy; CARTO, OpenStreetMap',
+    maxZoom: 19
+  }).addTo(mapInstance);
+
+  const points = RAW_DATA.heatmap_points ? (RAW_DATA.heatmap_points.density || []) : [];
+  if (L.heatLayer && points.length > 0) {
+    mapHeatLayer = L.heatLayer(points, {
+      radius: 26,
+      blur: 16,
+      maxZoom: 13,
+      gradient: { 0.2: '#10b981', 0.5: '#3b82f6', 0.8: '#f59e0b', 1.0: '#e11d48' }
+    }).addTo(mapInstance);
+  }
+
+  mapMarkersLayer = L.layerGroup().addTo(mapInstance);
+  updateMapMarkers();
+}
+
+function switchHeatmapLayer(mode) {
+  currentHeatMode = mode;
+  document.getElementById('btnHeatDensity').classList.toggle('active', mode === 'density');
+  document.getElementById('btnHeatPPM').classList.toggle('active', mode === 'ppm');
+  document.getElementById('btnHeatGrowth').classList.toggle('active', mode === 'growth');
+
+  const pts = RAW_DATA.heatmap_points[mode] || [];
+  if (mapHeatLayer) {
+    mapHeatLayer.setLatLngs(pts);
+  }
+
+  const legend = document.getElementById('mapLegendText');
+  if (mode === 'density') {
+    legend.innerHTML = `
+      <span style="font-weight: 800; color: var(--text-primary);">Relative Supply Density (0.0–1.0):</span>
+      <div class="map-legend-item"><div class="map-legend-dot" style="background: #10b981;"></div> Emerging Inventory (0.2–0.4)</div>
+      <div class="map-legend-item"><div class="map-legend-dot" style="background: #3b82f6;"></div> Moderate Supply (0.4–0.7)</div>
+      <div class="map-legend-item"><div class="map-legend-dot" style="background: #f59e0b;"></div> High Density Supply (0.7–0.9)</div>
+      <div class="map-legend-item"><div class="map-legend-dot" style="background: #e11d48;"></div> Major Concentration (1.0)</div>
+    `;
+  } else if (mode === 'ppm') {
+    legend.innerHTML = `
+      <span style="font-weight: 800; color: var(--text-primary);">💎 Price / m² Hotspots (4b):</span>
+      <div class="map-legend-item"><div class="map-legend-dot" style="background: #10b981;"></div> Below 35K EGP/m² (Affordable / Emerging)</div>
+      <div class="map-legend-item"><div class="map-legend-dot" style="background: #3b82f6;"></div> 35K – 50K EGP/m² (Established Urban)</div>
+      <div class="map-legend-item"><div class="map-legend-dot" style="background: #8b5cf6;"></div> 50K – 70K EGP/m² (Prime Gated Compound)</div>
+      <div class="map-legend-item"><div class="map-legend-dot" style="background: #e11d48;"></div> 70K+ EGP/m² (Ultra Luxury Enclave)</div>
+    `;
+  } else if (mode === 'growth') {
+    legend.innerHTML = `
+      <span style="font-weight: 800; color: var(--text-primary);">📈 10-Year Growth Intensity:</span>
+      <div class="map-legend-item"><div class="map-legend-dot" style="background: #3b82f6;"></div> 1.70x – 1.80x Baseline Urban Appreciation</div>
+      <div class="map-legend-item"><div class="map-legend-dot" style="background: #10b981;"></div> 1.85x – 2.00x Strong Compound Appreciation</div>
+      <div class="map-legend-item"><div class="map-legend-dot" style="background: #e11d48;"></div> 2.05x+ High-Yield Outperforming Corridors</div>
+    `;
+  }
+}
+
+function updateMapMarkers() {
+  if (!mapMarkersLayer) return;
+  mapMarkersLayer.clearLayers();
+
+  RAW_DATA.top_locations_geo.forEach(loc => {
+    const ppm = loc.median_ppm;
+    let color = '#10b981';
+    if (ppm > 70000) color = '#e11d48';
+    else if (ppm > 50000) color = '#8b5cf6';
+    else if (ppm > 35000) color = '#3b82f6';
+
+    const radius = Math.max(7, Math.min(22, Math.sqrt(loc.count) * 2.2));
+
+    const circle = L.circleMarker([loc.lat, loc.lon], {
+      radius: radius,
+      fillColor: color,
+      color: '#ffffff',
+      weight: 2,
+      opacity: 0.9,
+      fillOpacity: 0.8
+    });
+
+    const popupHtml = `
+      <div style="font-family:'Inter',sans-serif; font-size:12px; min-width:180px; color:#0f172a;">
+        <b style="font-size:13px; color:#0f172a; display:block; margin-bottom:4px;">${loc.location}</b>
+        <div style="margin-bottom:2px;">Sample Size: <b>${loc.count} listings (n=${loc.count})</b></div>
+        <div>Median Price: <b>${(loc.median_price/1e6).toFixed(2)}M EGP</b></div>
+        <div>Rate / m²: <b style="color:${color};">${Math.round(ppm).toLocaleString()} EGP</b></div>
+        <div>Compound Mix: <b>${loc.compound_pct}%</b></div>
+        <div style="font-size:10px; color:#64748b; margin-top:2px;">Region: ${loc.macro_region}</div>
+        <button onclick="filterByMapLocation('${loc.location.replace(/'/g, "\\'")}')" 
+          style="margin-top:8px; width:100%; background:#1e3a8a; color:white; border:none; padding:5px 8px; border-radius:5px; cursor:pointer; font-weight:700; font-size:11px;">
+          Filter to this Hub
+        </button>
+      </div>
+    `;
+
+    circle.bindPopup(popupHtml);
+    mapMarkersLayer.addLayer(circle);
+  });
+}
+
+function filterByMapLocation(locName) {
+  document.getElementById('tableSearch').value = locName;
+  onTableSearch();
+}
+
+// -------------------------------------------------------------------------
+// FILTERING & KPIS
+// -------------------------------------------------------------------------
+function applyFilters() {
+  const amen = document.getElementById('filterAmenities').value;
+  const finish = document.getElementById('filterFinishing').value;
+  const view = document.getElementById('filterView').value;
+  const type = document.getElementById('filterType').value;
+  const rooms = document.getElementById('filterRooms').value;
+  const maxP = parseFloat(document.getElementById('filterMaxPrice').value) * 1e6 || Infinity;
+  const geoStat = document.getElementById('filterGeoStatus').value;
+
+  filteredRecords = RAW_DATA.records.filter(r => {
+    if (amen !== 'ALL' && r[11] !== amen) return false;
+    if (finish !== 'ALL' && r[13] !== finish) return false;
+    if (view !== 'ALL' && r[7] !== view) return false;
+    if (type !== 'ALL' && r[14] !== type) return false;
+    if (rooms !== 'ALL' && Math.round(r[3]) !== parseInt(rooms)) return false;
+    if (r[0] > maxP) return false;
+    if (geoStat !== 'ALL' && r[16] !== geoStat) return false;
+    return true;
+  });
+
+  currentPage = 1;
+  updateKPIs();
+  updateDynamicCharts();
+  renderTable();
+  updateSim();
+  updateYieldEstimator();
+}
+
+function resetFilters() {
+  document.getElementById('filterAmenities').value = 'ALL';
+  document.getElementById('filterFinishing').value = 'ALL';
+  document.getElementById('filterView').value = 'ALL';
+  document.getElementById('filterType').value = 'ALL';
+  document.getElementById('filterRooms').value = 'ALL';
+  document.getElementById('filterMaxPrice').value = '';
+  document.getElementById('filterMinSample').value = '15';
+  document.getElementById('filterGeoStatus').value = 'VALID_GEO';
+  document.getElementById('tableSearch').value = '';
+  document.querySelectorAll('.persona-chip').forEach(c => c.classList.remove('active'));
+  document.getElementById('persona_all').classList.add('active');
+  applyFilters();
+}
+
+function updateKPIs() {
+  const n = filteredRecords.length;
+  document.getElementById('filteredRecordsLabel').innerText = `Showing ${n.toLocaleString()} of ${RAW_DATA.records.length.toLocaleString()} listings`;
+  document.getElementById('pulseFilterCount').innerText = `${n.toLocaleString()} / ${RAW_DATA.records.length.toLocaleString()}`;
+
+  if (n === 0) {
+    document.getElementById('kpiMedianPrice').innerText = '0 EGP';
+    document.getElementById('kpiMedianPPM').innerText = '0 EGP/m²';
+    document.getElementById('kpiMedianArea').innerText = '0 m²';
+    document.getElementById('kpiTotalVolume').innerText = '0';
+    return;
+  }
+
+  const prices = filteredRecords.map(r => r[0]).sort((a,b) => a-b);
+  const ppms = filteredRecords.map(r => r[1]).sort((a,b) => a-b);
+  const areas = filteredRecords.map(r => r[2]).sort((a,b) => a-b);
+  const p10s = filteredRecords.filter(r => r[15] > 0).map(r => r[15]).sort((a,b) => a-b);
+
+  const medPrice = prices[Math.floor(n * 0.5)];
+  const meanPrice = prices.reduce((a,b) => a+b, 0) / n;
+  const q25Price = prices[Math.floor(n * 0.25)];
+  const q75Price = prices[Math.floor(n * 0.75)];
+
+  const medPPM = ppms[Math.floor(n * 0.5)];
+  const meanPPM = ppms.reduce((a,b) => a+b, 0) / n;
+  const q25PPM = ppms[Math.floor(n * 0.25)];
+  const q75PPM = ppms[Math.floor(n * 0.75)];
+
+  const medArea = areas[Math.floor(n * 0.5)];
+  const q25Area = areas[Math.floor(n * 0.25)];
+  const q75Area = areas[Math.floor(n * 0.75)];
+
+  const med10Y = p10s.length ? p10s[Math.floor(p10s.length * 0.5)] : medPrice * 1.85;
+
+  document.getElementById('kpiMedianPrice').innerHTML = `${(medPrice/1e6).toFixed(2)}M <small style="font-size:15px; font-weight:700;">EGP</small>`;
+  document.getElementById('kpiMedianPPM').innerHTML = `${fmtNum(medPPM)} <small style="font-size:15px; font-weight:700;">EGP/m²</small>`;
+  document.getElementById('kpiMedianArea').innerHTML = `${Math.round(medArea)} <small style="font-size:15px; font-weight:700;">m²</small>`;
+  document.getElementById('kpiMedian10Y').innerHTML = `${(med10Y/1e6).toFixed(2)}M <small style="font-size:15px; font-weight:700;">EGP</small>`;
+  document.getElementById('kpiTotalVolume').innerText = n.toLocaleString();
+
+  document.getElementById('pulseMedianPrice').innerText = `${(medPrice/1e6).toFixed(2)}M EGP`;
+  document.getElementById('pulseMedianPPM').innerText = `${fmtNum(medPPM)} EGP`;
+  document.getElementById('pulseMedianArea').innerText = `${Math.round(medArea)} m²`;
+}
+
+// -------------------------------------------------------------------------
+// CHARTS
+// -------------------------------------------------------------------------
+function initStaticCharts() {
+  const isDark = currentTheme === 'dark';
+  const gridColor = isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9';
+
+  // Executive Valuation Chart
+  const ctxExec = document.getElementById('chartExecutiveAppreciation').getContext('2d');
+  chartInstances.exec = new Chart(ctxExec, {
+    type: 'bar',
+    data: {
+      labels: ['Standalone Residential', 'Gated Compound', 'Turnkey Superlux', 'Turnkey Compound Luxury'],
+      datasets: [
+        { label: 'Observed Current Median (2026)', data: [4.50, 6.55, 5.30, 7.85], backgroundColor: '#1e3a8a', borderRadius: 6 },
+        { label: 'Model-Projected 10Y Value (2036)', data: [7.67, 13.33, 10.20, 16.50], backgroundColor: '#059669', borderRadius: 6 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'Inter', weight: 600 } } },
+        tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${c.raw.toFixed(2)}M EGP` } }
+      },
+      scales: {
+        y: { title: { display: true, text: 'Median Valuation (Million EGP)' }, grid: { color: gridColor } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  // Finishing Donut Chart
+  const ctxFin = document.getElementById('chartFinishingDonut').getContext('2d');
+  chartInstances.fin = new Chart(ctxFin, {
+    type: 'doughnut',
+    data: {
+      labels: ['Superlux', 'Semi-Finished', 'Core & Shell'],
+      datasets: [{
+        data: [5692, 3169, 1139],
+        backgroundColor: ['#059669', '#f59e0b', '#94a3b8'],
+        borderWidth: 2,
+        borderColor: isDark ? '#111827' : '#ffffff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Inter', size: 11 } } },
+        tooltip: { callbacks: { label: c => ` ${c.label}: ${c.raw.toLocaleString()} units (${((c.raw/10000)*100).toFixed(1)}%)` } }
+      },
+      cutout: '68%'
+    }
+  });
+
+  // Temporal Handover Chart
+  const tt = RAW_DATA.temporal_trends;
+  const ctxTemp = document.getElementById('chartTemporal').getContext('2d');
+  chartInstances.temp = new Chart(ctxTemp, {
+    type: 'line',
+    data: {
+      labels: tt.years,
+      datasets: [{
+        label: 'Median Price (M EGP)',
+        data: tt.median_prices,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.12)',
+        fill: true,
+        tension: 0.35,
+        pointRadius: 4,
+        pointBackgroundColor: '#3b82f6'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => ` Median: ${c.raw}M EGP (${tt.counts[c.dataIndex]} listings, n=${tt.counts[c.dataIndex]})` } }
+      },
+      scales: {
+        y: { grid: { color: gridColor }, title: { display: true, text: 'Median Price (M EGP)' } },
+        x: { grid: { display: false }, title: { display: true, text: 'Scheduled Handover / Delivery Year' } }
+      }
+    }
+  });
+}
+
+// -------------------------------------------------------------------------
+// WATERFALL CHART
+// -------------------------------------------------------------------------
+function initWaterfallChart() {
+  const ctx = document.getElementById('chartWaterfall').getContext('2d');
+  const isDark = currentTheme === 'dark';
+  const gridColor = isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9';
+
+  const labels = [
+    'Baseline Unit (100m²)',
+    '+ Living Area (+48m²)',
+    '+ Compound Community',
+    '+ Superlux Finishing',
+    '+ Prime Hub Tier',
+    '+ Floor & View',
+    'Luxury Benchmark'
+  ];
+
+  const barRanges = [
+    [0, 2.35],
+    [2.35, 4.10],
+    [4.10, 6.15],
+    [6.15, 7.00],
+    [7.00, 7.95],
+    [7.95, 8.30],
+    [0, 8.30]
+  ];
+
+  const bgColors = [
+    '#3b82f6',
+    '#059669',
+    '#10b981',
+    '#06b6d4',
+    '#8b5cf6',
+    '#f59e0b',
+    '#1e3a8a'
+  ];
+
+  chartInstances.waterfall = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Price Build-up (M EGP)',
+        data: barRanges,
+        backgroundColor: bgColors,
+        borderRadius: 5,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (c) => {
+              const r = c.raw;
+              const delta = (r[1] - r[0]).toFixed(2);
+              if (c.dataIndex === 0) return ` Baseline Core: ${r[1]}M EGP`;
+              if (c.dataIndex === 6) return ` Luxury Valuation Benchmark: ${r[1]}M EGP`;
+              return ` Contribution: +${delta}M EGP (Cumulative: ${r[1]}M EGP)`;
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          grid: { color: gridColor },
+          title: { display: true, text: 'Valuation Contribution (Million EGP)' },
+          min: 0,
+          max: 9.5
+        },
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 10 }, maxRotation: 30, minRotation: 30 }
+        }
+      }
+    }
+  });
+}
+
+function updateDynamicCharts() {
+  const n = filteredRecords.length;
+  if (n === 0) return;
+
+  const isDark = currentTheme === 'dark';
+  const gridColor = isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9';
+
+  // 1. Price Histogram
+  const prices = filteredRecords.map(r => r[0]);
+  const pBins = 15;
+  const pMax = Math.min(20000000, Math.max(...prices));
+  const pMin = Math.min(...prices);
+  const step = (pMax - pMin) / pBins;
+  const histData = new Array(pBins).fill(0);
+  const histLabels = [];
+
+  for (let i=0; i<pBins; i++) {
+    const low = pMin + i*step;
+    const high = low + step;
+    histLabels.push(`${(low/1e6).toFixed(1)}M-${(high/1e6).toFixed(1)}M`);
+  }
+  prices.forEach(p => {
+    let idx = Math.floor((p - pMin) / step);
+    if (idx >= pBins) idx = pBins - 1;
+    if (idx >= 0) histData[idx]++;
+  });
+
+  if (chartInstances.priceHist) chartInstances.priceHist.destroy();
+  const ctxPH = document.getElementById('chartPriceHist').getContext('2d');
+  chartInstances.priceHist = new Chart(ctxPH, {
+    type: 'bar',
+    data: {
+      labels: histLabels,
+      datasets: [{ label: 'Listings Count', data: histData, backgroundColor: '#3b82f6', borderRadius: 4 }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { grid: { color: gridColor }, title: { display: true, text: 'Frequency' } },
+        x: { grid: { display: false }, ticks: { maxRotation: 45, minRotation: 45, font: { size: 10 } } }
+      }
+    }
+  });
+
+  // 2. Area Histogram
+  const areas = filteredRecords.map(r => r[2]);
+  const aBins = 12;
+  const aMin = Math.min(...areas);
+  const aMax = Math.min(300, Math.max(...areas));
+  const aStep = (aMax - aMin) / aBins;
+  const aHistData = new Array(aBins).fill(0);
+  const aHistLabels = [];
+
+  for (let i=0; i<aBins; i++) {
+    const low = aMin + i*aStep;
+    const high = low + aStep;
+    aHistLabels.push(`${Math.round(low)}-${Math.round(high)}m²`);
+  }
+  areas.forEach(a => {
+    let idx = Math.floor((a - aMin) / aStep);
+    if (idx >= aBins) idx = aBins - 1;
+    if (idx >= 0) aHistData[idx]++;
+  });
+
+  if (chartInstances.areaHist) chartInstances.areaHist.destroy();
+  const ctxAH = document.getElementById('chartAreaHist').getContext('2d');
+  chartInstances.areaHist = new Chart(ctxAH, {
+    type: 'bar',
+    data: {
+      labels: aHistLabels,
+      datasets: [{ label: 'Apartment Count', data: aHistData, backgroundColor: '#8b5cf6', borderRadius: 4 }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { grid: { color: gridColor }, title: { display: true, text: 'Frequency' } },
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+
+  // 3. Top Locations Bar Chart
+  const minSample = parseInt(document.getElementById('filterMinSample').value) || 15;
+  document.getElementById('topLocSubtitle').innerText = `Ranked locations with sample size n ≥ ${minSample} listings`;
+
+  const locCounts = {};
+  const locPrices = {};
+  filteredRecords.forEach(r => {
+    if (r[16] !== 'VALID_GEO') return;
+    const l = r[9];
+    locCounts[l] = (locCounts[l] || 0) + 1;
+    if (!locPrices[l]) locPrices[l] = [];
+    locPrices[l].push(r[0]);
+  });
+
+  const qualifiedLocs = Object.keys(locCounts).filter(l => locCounts[l] >= minSample);
+  const top10 = qualifiedLocs.sort((a,b) => {
+    const arrA = locPrices[a].sort((x,y) => x-y);
+    const arrB = locPrices[b].sort((x,y) => x-y);
+    const medA = arrA[Math.floor(arrA.length/2)];
+    const medB = arrB[Math.floor(arrB.length/2)];
+    return medB - medA;
+  }).slice(0, 10);
+
+  const top10Medians = top10.map(l => {
+    const arr = locPrices[l].sort((x,y) => x-y);
+    return (arr[Math.floor(arr.length/2)] / 1e6).toFixed(2);
+  });
+
+  const top10Labels = top10.map(l => `${l} (n=${locCounts[l]})`);
+
+  if (chartInstances.topLoc) chartInstances.topLoc.destroy();
+  const ctxTL = document.getElementById('chartTopLocations').getContext('2d');
+  chartInstances.topLoc = new Chart(ctxTL, {
+    type: 'bar',
+    data: {
+      labels: top10Labels,
+      datasets: [{ label: 'Median Price (M EGP)', data: top10Medians, backgroundColor: '#0284c7', borderRadius: 5 }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => ` Observed Median: ${c.raw}M EGP (${locCounts[top10[c.dataIndex]]} verified listings)` } }
+      },
+      scales: {
+        x: { grid: { color: gridColor }, title: { display: true, text: 'Observed Median Price (Million EGP)' } },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+
+  // 4. Scatter Plot
+  const sample = filteredRecords.length > 800 ? filteredRecords.filter((_, i) => i % Math.ceil(filteredRecords.length / 800) === 0) : filteredRecords;
+  const scatterCompound = [];
+  const scatterBasic = [];
+  sample.forEach(r => {
+    const pt = { x: r[2], y: r[0]/1e6, loc: r[9], ppm: r[1], geo: r[16] };
+    if (r[12] === 'B(Compound)') scatterCompound.push(pt);
+    else scatterBasic.push(pt);
+  });
+
+  if (chartInstances.scatter) chartInstances.scatter.destroy();
+  const ctxSc = document.getElementById('chartScatter').getContext('2d');
+  chartInstances.scatter = new Chart(ctxSc, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        { label: 'Gated Compound', data: scatterCompound, backgroundColor: 'rgba(5, 150, 105, 0.65)', pointRadius: 4.5 },
+        { label: 'Standalone / Non-Compound', data: scatterBasic, backgroundColor: 'rgba(59, 130, 246, 0.55)', pointRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'Inter', weight: 600 } } },
+        tooltip: {
+          callbacks: {
+            label: c => ` ${c.raw.loc} | ${c.raw.x.toFixed(0)}m² | ${c.raw.y.toFixed(2)}M EGP (${Math.round(c.raw.ppm).toLocaleString()} EGP/m²)`
+          }
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Living Area (m²)' }, grid: { color: gridColor }, max: 350 },
+        y: { title: { display: true, text: 'Price (Million EGP)' }, grid: { color: gridColor }, max: 25 }
+      }
+    }
+  });
+}
+
+// -------------------------------------------------------------------------
+// CORRELATION HEATMAP
+// -------------------------------------------------------------------------
+function switchCorrelationView(mode) {
+  currentCorrView = mode;
+  document.getElementById('btnCorrStruct').classList.toggle('active', mode === 'structural');
+  document.getElementById('btnCorrOverall').classList.toggle('active', mode === 'overall');
+  renderCorrelationHeatmap();
+}
+
+function renderCorrelationHeatmap() {
+  const data = currentCorrView === 'structural' ? RAW_DATA.structural_correlation : RAW_DATA.overall_correlation;
+  const cols = data.columns;
+  const mat = data.matrix;
+  let html = '<tr><th>Metric</th>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr>';
+
+  mat.forEach((row, i) => {
+    html += `<tr><th style="text-align:left;">${cols[i]}</th>`;
+    row.forEach(val => {
+      let bg = '#ffffff';
+      let col = '#0f172a';
+      if (val === 1.0) { bg = '#dbeafe'; }
+      else if (val > 0.6) { bg = '#bbf7d0'; col = '#065f46'; }
+      else if (val > 0.3) { bg = '#dcfce7'; col = '#15803d'; }
+      else if (val < -0.1) { bg = '#fee2e2'; col = '#b91c1c'; }
+      else { bg = '#f8fafc'; }
+      html += `<td style="background:${bg}; color:${col}; font-weight:${Math.abs(val)>0.5?'700':'500'};">${val.toFixed(2)}</td>`;
+    });
+    html += '</tr>';
+  });
+  document.getElementById('heatmapTable').innerHTML = html;
+
+  const notice = document.getElementById('corrNotice');
+  if (currentCorrView === 'structural') {
+    notice.innerHTML = `🔬 <b>Structural View Active:</b> Excludes total price to isolate genuine physical dependencies.`;
+  } else {
+    notice.innerHTML = `⚠️ <b>Overall View Active:</b> Includes total price with mechanically induced endogeneity.`;
+  }
+}
+
+// -------------------------------------------------------------------------
+// RENTAL YIELD ESTIMATOR
+// -------------------------------------------------------------------------
+function updateYieldEstimator() {
+  const grossRate = parseFloat(document.getElementById('slGrossYield').value);
+  const opexRate = parseFloat(document.getElementById('slOpEx').value);
+  const equityRate = parseFloat(document.getElementById('slEquityStake').value);
+
+  document.getElementById('lblGrossYield').innerText = `${grossRate.toFixed(2)}% Annual`;
+  document.getElementById('lblOpEx').innerText = `${opexRate.toFixed(1)}% OpEx`;
+  document.getElementById('lblEquityStake').innerText = `${Math.round(equityRate)}% Cash Down`;
+
+  const n = filteredRecords.length;
+  const prices = (n > 0 ? filteredRecords : RAW_DATA.records).map(r => r[0]).sort((a,b) => a-b);
+  const medPrice = prices[Math.floor(prices.length * 0.5)] || 5083000;
+
+  const annualGrossRent = medPrice * (grossRate / 100.0);
+  const monthlyRent = annualGrossRent / 12.0;
+  const annualNOI = annualGrossRent * (1.0 - (opexRate / 100.0));
+  const netCapRate = (annualNOI / medPrice) * 100.0;
+  const equityInvested = medPrice * (equityRate / 100.0);
+  const cashOnCash = (annualNOI / equityInvested) * 100.0;
+  const paybackYears = equityInvested / (annualNOI || 1);
+
+  document.getElementById('valMonthlyRent').innerHTML = `${fmtNum(monthlyRent)} <small style="font-size:12px;">EGP</small>`;
+  document.getElementById('subAnnualGross').innerText = `Gross Annual: ${fmtNum(annualGrossRent)} EGP`;
+  document.getElementById('valAnnualNOI').innerHTML = `${fmtNum(annualNOI)} <small style="font-size:12px;">EGP</small>`;
+  document.getElementById('valNetCapRate').innerText = `${netCapRate.toFixed(2)}%`;
+  document.getElementById('valCashOnCash').innerText = `${cashOnCash.toFixed(2)}%`;
+  document.getElementById('valPaybackYears').innerText = `Est. Payback: ${paybackYears.toFixed(1)} Years`;
+}
+
+// -------------------------------------------------------------------------
+// DATA EXPLORER & PAGINATION
+// -------------------------------------------------------------------------
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  const start = (currentPage - 1) * pageSize;
+  const end = Math.min(start + pageSize, filteredRecords.length);
+  const pageItems = filteredRecords.slice(start, end);
+
+  let html = '';
+  pageItems.forEach((r, idx) => {
+    const rowIdx = start + idx;
+    const isComp = r[12] === 'B(Compound)';
+    const amenClass = isComp ? 'badge-compound' : 'badge-basic';
+    const finClass = r[13] === 'superlux' ? 'badge-superlux' : 'badge-semi';
+    const geoClass = r[16] === 'VALID_GEO' ? 'badge-valid-geo' : 'badge-unresolved-geo';
+    const geoLabel = r[16] === 'VALID_GEO' ? 'Verified' : 'Unresolved Text';
+    const p10Str = r[15] > 0 ? fmtEGP(r[15]) : '<span style="color:#94a3b8;">Not Modeled (Own)</span>';
+
+    html += `
+      <tr>
+        <td><b>${r[9]}</b> <small style="color:#94a3b8; display:block; font-size:10px;">${r[10]}</small></td>
+        <td><span class="badge-cell ${geoClass}">${geoLabel}</span></td>
+        <td>${r[0].toLocaleString()} EGP</td>
+        <td>${Math.round(r[1]).toLocaleString()}</td>
+        <td>${r[2].toFixed(0)} m²</td>
+        <td>${Math.round(r[3])}</td>
+        <td>${Math.round(r[4])}</td>
+        <td>${Math.round(r[6])}</td>
+        <td><span class="badge-cell ${amenClass}">${isComp ? 'Compound' : 'Standalone'}</span></td>
+        <td><span class="badge-cell ${finClass}">${r[13]}</span></td>
+        <td>${p10Str}</td>
+        <td><button onclick="openModal(${rowIdx})" style="background:var(--border-light); border:1px solid var(--border-card); color:var(--text-primary); padding:4px 9px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:700;">Inspect</button></td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = html || '<tr><td colspan="12" style="text-align:center; padding:30px; color:#94a3b8;">No matching properties found.</td></tr>';
+  document.getElementById('pageInfo').innerText = `Showing ${start + 1} to ${end} of ${filteredRecords.length.toLocaleString()} entries`;
+  document.getElementById('btnPrev').disabled = (currentPage === 1);
+  document.getElementById('btnNext').disabled = (end >= filteredRecords.length);
+}
+
+function changePage(delta) {
+  currentPage += delta;
+  renderTable();
+}
+
+function onTableSearch() {
+  const q = document.getElementById('tableSearch').value.toLowerCase();
+  if (!q) {
+    applyFilters();
+    return;
+  }
+  filteredRecords = RAW_DATA.records.filter(r => {
+    return r[9].toLowerCase().includes(q) ||
+           r[10].toLowerCase().includes(q) ||
+           r[13].toLowerCase().includes(q) ||
+           r[17].toLowerCase().includes(q) ||
+           r[7].toLowerCase().includes(q);
+  });
+  currentPage = 1;
+  updateKPIs();
+  renderTable();
+}
+
+function sortTable(colIdx) {
+  if (currentSortCol === colIdx) {
+    currentSortAsc = !currentSortAsc;
+  } else {
+    currentSortCol = colIdx;
+    currentSortAsc = true;
+  }
+  filteredRecords.sort((a, b) => {
+    const vA = a[colIdx];
+    const vB = b[colIdx];
+    if (typeof vA === 'string') {
+      return currentSortAsc ? vA.localeCompare(vB) : vB.localeCompare(vA);
+    }
+    return currentSortAsc ? (vA - vB) : (vB - vA);
+  });
+  renderTable();
+}
+
+// Modal Inspection
+function openModal(idx) {
+  const r = filteredRecords[idx];
+  document.getElementById('modalLocation').innerText = r[9];
+  document.getElementById('mNormLoc').innerText = r[9];
+  document.getElementById('mRawLoc').innerText = r[10];
+  document.getElementById('mPrice').innerText = r[0].toLocaleString() + ' EGP';
+  document.getElementById('mPPM').innerText = Math.round(r[1]).toLocaleString() + ' EGP/m²';
+  document.getElementById('mArea').innerText = r[2].toFixed(1) + ' m²';
+  document.getElementById('mRooms').innerText = `${Math.round(r[3])} Bed / ${Math.round(r[4])} Bath`;
+  document.getElementById('mFloor').innerText = 'Floor ' + Math.round(r[5]);
+  document.getElementById('mYear').innerText = Math.round(r[6]);
+  document.getElementById('mAmenities').innerText = `${r[11]} [Raw: ${r[12]}]`;
+  document.getElementById('mFinishing').innerText = r[13];
+  document.getElementById('mView').innerText = r[7];
+  document.getElementById('mGeoStatus').innerText = r[16] === 'VALID_GEO' ? 'Verified Geographic Location' : 'Unresolved / Marketing Description';
+  document.getElementById('mMacroRegion').innerText = r[17];
+  document.getElementById('m10Y').innerText = r[15] > 0 ? (r[15].toLocaleString() + ' EGP (' + (r[15]/r[0]).toFixed(2) + 'x Super Ensemble Forecast)') : 'Residential Own (Not Modeled)';
+
+  document.getElementById('detailModal').classList.add('active');
+}
+
+function closeModal(e) {
+  if (e.target.id === 'detailModal') closeModalDirect();
+}
+function closeModalDirect() {
+  document.getElementById('detailModal').classList.remove('active');
+}
+
+// Export CSV of Filtered Records
+function exportFilteredCSV() {
+  const headers = ["Price_EGP","PPM_EGP","Area_m2","Rooms","Bathrooms","Floor_Level","Delivery_Year","View","Payment_Method","Normalized_Location","Raw_Location","Setting_Presentation","Setting_Raw","Finishing","Listing_Type","Projected_10Y_Price","Geo_Status","Macro_Region"];
+  let csv = headers.join(",") + "\n";
+  filteredRecords.forEach(r => {
+    const line = r.map(v => typeof v === 'string' ? `"${v.replace(/"/g, '""')}"` : v).join(",");
+    csv += line + "\n";
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `egypt_apartments_audited_${filteredRecords.length}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// -------------------------------------------------------------------------
+// SEGMENT DUEL ENGINE
+// -------------------------------------------------------------------------
+function updateDuel() {
+  const selA = document.getElementById('duelSegmentA').value;
+  const selB = document.getElementById('duelSegmentB').value;
+
+  function filterSeg(val) {
+    if (val === 'compound') return RAW_DATA.records.filter(r => r[12] === 'B(Compound)');
+    if (val === 'basic') return RAW_DATA.records.filter(r => r[12] === 'C(BASICS)');
+    if (val === 'superlux') return RAW_DATA.records.filter(r => r[13] === 'superlux');
+    if (val === 'semi') return RAW_DATA.records.filter(r => r[13] === 'semi');
+    if (val === 'inner') return RAW_DATA.records.filter(r => r[7] === 'Inner');
+    if (val === 'outer') return RAW_DATA.records.filter(r => r[7] === 'Outer');
+    if (val === 'investment') return RAW_DATA.records.filter(r => r[14] === 'Investment');
+    if (val === 'own') return RAW_DATA.records.filter(r => r[14] === 'Own');
+    return RAW_DATA.records;
+  }
+
+  const grpA = filterSeg(selA);
+  const grpB = filterSeg(selB);
+
+  function calcMetrics(arr) {
+    const p = arr.map(r => r[0]).sort((a,b)=>a-b);
+    const ppm = arr.map(r => r[1]).sort((a,b)=>a-b);
+    const ar = arr.map(r => r[2]).sort((a,b)=>a-b);
+    return {
+      count: arr.length,
+      medP: p[Math.floor(p.length*0.5)] || 0,
+      medPPM: ppm[Math.floor(ppm.length*0.5)] || 0,
+      medArea: ar[Math.floor(ar.length*0.5)] || 0
+    };
+  }
+
+  const mA = calcMetrics(grpA);
+  const mB = calcMetrics(grpB);
+
+  const deltaP = ((mA.medP - mB.medP) / mB.medP * 100).toFixed(1);
+  const deltaPPM = ((mA.medPPM - mB.medPPM) / mB.medPPM * 100).toFixed(1);
+  const deltaArea = ((mA.medArea - mB.medArea) / mB.medArea * 100).toFixed(1);
+
+  document.getElementById('duelHeaderA').innerText = document.getElementById('duelSegmentA').selectedOptions[0].text;
+  document.getElementById('duelHeaderB').innerText = document.getElementById('duelSegmentB').selectedOptions[0].text;
+
+  const body = document.getElementById('duelBody');
+  body.innerHTML = `
+    <tr>
+      <td><b>Sample Size</b></td>
+      <td>${mA.count.toLocaleString()} units (n=${mA.count})</td>
+      <td>${mB.count.toLocaleString()} units (n=${mB.count})</td>
+      <td><span class="duel-delta">${(mA.count - mB.count > 0 ? '+' : '')}${(mA.count - mB.count).toLocaleString()} listings</span></td>
+    </tr>
+    <tr>
+      <td><b>Observed Median Price</b></td>
+      <td><b>${(mA.medP/1e6).toFixed(2)}M EGP</b></td>
+      <td><b>${(mB.medP/1e6).toFixed(2)}M EGP</b></td>
+      <td><span class="duel-delta ${deltaP>=0?'positive':'negative'}">${deltaP>=0?'+':''}${deltaP}% Difference</span></td>
+    </tr>
+    <tr>
+      <td><b>Observed Median Rate (PPM)</b></td>
+      <td><b>${fmtNum(mA.medPPM)} EGP/m²</b></td>
+      <td><b>${fmtNum(mB.medPPM)} EGP/m²</b></td>
+      <td><span class="duel-delta ${deltaPPM>=0?'positive':'negative'}">${deltaPPM>=0?'+':''}${deltaPPM}% Difference</span></td>
+    </tr>
+    <tr>
+      <td><b>Typical Unit Living Space</b></td>
+      <td>${Math.round(mA.medArea)} m²</td>
+      <td>${Math.round(mB.medArea)} m²</td>
+      <td><span class="duel-delta">${deltaArea>=0?'+':''}${deltaArea}% Area Delta</span></td>
+    </tr>
+  `;
+}
+
+// -------------------------------------------------------------------------
+// 10-YEAR HORIZON SIMULATOR
+// -------------------------------------------------------------------------
+function updateSim() {
+  const years = parseInt(document.getElementById('simYears').value);
+  const downPct = parseInt(document.getElementById('simDown').value) / 100.0;
+  document.getElementById('simYearsLabel').innerText = `${years} Years (${2026 + years})`;
+  document.getElementById('simDownLabel').innerText = `${Math.round(downPct*100)}% (Equity Stake)`;
+
+  const n = filteredRecords.length;
+  if (!n) return;
+  const p = filteredRecords.map(r => r[0]).sort((a,b)=>a-b);
+  const curP = p[Math.floor(n*0.5)] || 5083000;
+
+  const compShare = filteredRecords.filter(r => r[12]==='B(Compound)').length / n;
+  const cagr = 0.052 + (compShare * 0.026);
+
+  const futureVal = curP * Math.pow(1.0 + cagr, years);
+  const gain = futureVal - curP;
+  const downPayment = curP * downPct;
+  const equityROI = ((futureVal - (curP - downPayment) - downPayment) / downPayment) * 100.0;
+
+  document.getElementById('simBaseVal').innerText = `Current Median: ${(curP/1e6).toFixed(2)}M EGP`;
+  document.getElementById('simProjectedVal').innerText = `${(futureVal/1e6).toFixed(2)}M`;
+  document.getElementById('simGainVal').innerText = `+${(gain/1e6).toFixed(2)}M EGP`;
+  document.getElementById('simROIVal').innerText = `Estimated Equity ROI: +${Math.round(equityROI)}%`;
+}
+</script>
+</body>
+</html>

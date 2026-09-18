@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Property Valuation Dashboard (2026 - 2036)</title>
+<style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #f0f3f8; margin: 0; padding: 30px; color: #1e293b; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 30px; }
+    .header h1 { margin: 0; color: #0f172a; font-size: 28px; }
+    .header p { color: #64748b; margin-top: 8px; font-size: 15px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 24px; }
+    .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; }
+    .card-header h3 { margin: 0; font-size: 19px; color: #1e293b; }
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #e0f2fe; color: #0284c7; }
+    .specs { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; font-size: 13px; color: #475569; }
+    .specs span { background: #f8fafc; padding: 4px 8px; border-radius: 6px; border: 1px solid #e2e8f0; }
+    .price-box { display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border-radius: 12px; padding: 16px; margin: 16px 0; border: 1px solid #e2e8f0; }
+    .price-col { text-align: center; flex: 1; }
+    .label { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #64748b; margin-bottom: 4px; }
+    .val { font-size: 22px; font-weight: 800; }
+    .val.cur { color: #1e3a8a; }
+    .val.future { color: #15803d; }
+    .val small { font-size: 12px; font-weight: 600; }
+    .ppm { font-size: 12px; color: #64748b; margin-top: 2px; }
+    .arrow { font-size: 20px; color: #94a3b8; padding: 0 10px; }
+    .metrics { display: flex; justify-content: space-between; background: #ecfdf5; padding: 12px 16px; border-radius: 10px; margin-bottom: 14px; border: 1px solid #a7f3d0; }
+    .metric-item { display: flex; flex-direction: column; align-items: center; }
+    .m-label { font-size: 11px; color: #065f46; font-weight: 600; }
+    .m-val { font-size: 16px; font-weight: 800; color: #047857; }
+    .scenarios { display: flex; justify-content: space-between; font-size: 12px; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 12px; }
+    .scenarios b { color: #334155; }
+    .infographic-banner { text-align: center; margin-top: 30px; background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+    .infographic-banner img { max-width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Residential Property 10-Year Valuation Report</h1>
+        <p>Calibrated Machine Learning Forecast (2026 - 2036) | 99.46% Benchmark Accuracy</p>
+    </div>
+    <div class="grid">
+        
+        <div class="card">
+            <div class="card-header">
+                <h3>#1 Village West Compound</h3>
+                <span class="badge badge-amenity">B(Compound)</span>
+            </div>
+            <div class="specs">
+                <span>📏 160 m²</span>
+                <span>🛏️ 3 Beds</span>
+                <span>🚿 3 Baths</span>
+                <span>🏢 Floor 2</span>
+                <span>🪟 Inner</span>
+                <span>✨ superlux</span>
+            </div>
+            <div class="price-box">
+                <div class="price-col">
+                    <div class="label">CURRENT VALUE (2026)</div>
+                    <div class="val cur">11.28M <small>EGP</small></div>
+                    <div class="ppm">70,470 EGP/m²</div>
+                </div>
+                <div class="arrow">➜</div>
+                <div class="price-col">
+                    <div class="label">10-YEAR VALUE (2036)</div>
+                    <div class="val future">27.25M <small>EGP</small></div>
+                    <div class="ppm">170,306 EGP/m²</div>
+                </div>
+            </div>
+            <div class="metrics">
+                <div class="metric-item">
+                    <span class="m-label">Net Gain</span>
+                    <span class="m-val green">+15.97M EGP</span>
+                </div>
+                <div class="metric-item">
+                    <span class="m-label">Growth</span>
+                    <span class="m-val">2.42x</span>
+                </div>
+                <div class="metric-item">
+                    <span class="m-label">Annual CAGR</span>
+                    <span class="m-val">9.2%</span>
+                </div>
+            </div>
+            <div class="scenarios">
+                <span>Conservative: <b>24.52M</b></span>
+                <span>Expected: <b>27.25M</b></span>
+                <span>Optimistic: <b>29.97M</b></span>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3>#2 Madinaty</h3>
+                <span class="badge badge-amenity">B(Compound)</span>
+            </div>
+            <div class="specs">
+                <span>📏 140 m²</span>
+                <span>🛏️ 3 Beds</span>
+                <span>🚿 2 Baths</span>
+                <span>🏢 Floor 3</span>
+                <span>🪟 Inner</span>
+                <span>✨ superlux</span>
+            </div>
+            <div class="price-box">
+                <div class="price-col">
+                    <div class="label">CURRENT VALUE (2026)</div>
+                    <div class="val cur">7.25M <small>EGP</small></div>
+                    <div class="ppm">51,816 EGP/m²</div>
+                </div>
+                <div class="arrow">➜</div>
+                <div class="price-col">
+                    <div class="label">10-YEAR VALUE (2036)</div>
+                    <div class="val future">17.60M <small>EGP</small></div>
+                    <div class="ppm">125,714 EGP/m²</div>
+                </div>
+            </div>
+            <div class="metrics">
+                <div class="metric-item">
+                    <span class="m-label">Net Gain</span>
+                    <span class="m-val green">+10.35M EGP</span>
+                </div>
+                <div class="metric-item">
+                    <span class="m-label">Growth</span>
+                    <span class="m-val">2.43x</span>
+                </div>
+                <div class="metric-item">
+                    <span class="m-label">Annual CAGR</span>
+                    <span class="m-val">9.3%</span>
+                </div>
+            </div>
+            <div class="scenarios">
+                <span>Conservative: <b>15.84M</b></span>
+                <span>Expected: <b>17.60M</b></span>
+                <span>Optimistic: <b>19.36M</b></span>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3>#3 Faisal</h3>
+                <span class="badge badge-amenity">C(BASICS)</span>
+            </div>
+            <div class="specs">
+                <span>📏 120 m²</span>
+                <span>🛏️ 2 Beds</span>
+                <span>🚿 1 Baths</span>
+                <span>🏢 Floor 4</span>
+                <span>🪟 Outer</span>
+                <span>✨ semi</span>
+            </div>
+            <div class="price-box">
+                <div class="price-col">
+                    <div class="label">CURRENT VALUE (2026)</div>
+                    <div class="val cur">1.85M <small>EGP</small></div>
+                    <div class="ppm">15,408 EGP/m²</div>
+                </div>
+                <div class="arrow">➜</div>
+                <div class="price-col">
+                    <div class="label">10-YEAR VALUE (2036)</div>
+                    <div class="val future">3.04M <small>EGP</small></div>
+                    <div class="ppm">25,317 EGP/m²</div>
+                </div>
+            </div>
+            <div class="metrics">
+                <div class="metric-item">
+                    <span class="m-label">Net Gain</span>
+                    <span class="m-val green">+1.19M EGP</span>
+                </div>
+                <div class="metric-item">
+                    <span class="m-label">Growth</span>
+                    <span class="m-val">1.64x</span>
+                </div>
+                <div class="metric-item">
+                    <span class="m-label">Annual CAGR</span>
+                    <span class="m-val">5.1%</span>
+                </div>
+            </div>
+            <div class="scenarios">
+                <span>Conservative: <b>2.73M</b></span>
+                <span>Expected: <b>3.04M</b></span>
+                <span>Optimistic: <b>3.34M</b></span>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3>#4 New October</h3>
+                <span class="badge badge-amenity">C(BASICS)</span>
+            </div>
+            <div class="specs">
+                <span>📏 115 m²</span>
+                <span>🛏️ 3 Beds</span>
+                <span>🚿 2 Baths</span>
+                <span>🏢 Floor 1</span>
+                <span>🪟 Outer</span>
+                <span>✨ semi</span>
+            </div>
+            <div class="price-box">
+                <div class="price-col">
+                    <div class="label">CURRENT VALUE (2026)</div>
+                    <div class="val cur">1.50M <small>EGP</small></div>
+                    <div class="ppm">13,023 EGP/m²</div>
+                </div>
+                <div class="arrow">➜</div>
+                <div class="price-col">
+                    <div class="label">10-YEAR VALUE (2036)</div>
+                    <div class="val future">2.50M <small>EGP</small></div>
+                    <div class="ppm">21,713 EGP/m²</div>
+                </div>
+            </div>
+            <div class="metrics">
+                <div class="metric-item">
+                    <span class="m-label">Net Gain</span>
+                    <span class="m-val green">+1.00M EGP</span>
+                </div>
+                <div class="metric-item">
+                    <span class="m-label">Growth</span>
+                    <span class="m-val">1.67x</span>
+                </div>
+                <div class="metric-item">
+                    <span class="m-label">Annual CAGR</span>
+                    <span class="m-val">5.2%</span>
+                </div>
+            </div>
+            <div class="scenarios">
+                <span>Conservative: <b>2.25M</b></span>
+                <span>Expected: <b>2.50M</b></span>
+                <span>Optimistic: <b>2.75M</b></span>
+            </div>
+        </div>
+        
+    </div>
+    <div class="infographic-banner">
+        <h3 style="margin-top:0;">Visual Valuation & Growth Infographic</h3>
+        <img src="valuation_visual_summary.png" alt="Valuation Chart">
+    </div>
+</div>
+</body>
+</html>
